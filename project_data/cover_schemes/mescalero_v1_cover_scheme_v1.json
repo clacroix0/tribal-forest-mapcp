@@ -1,0 +1,608 @@
+{
+  "schema_type": "cover_scheme_configuration",
+  "scheme_id": "mescalero_v1",
+  "scheme_version": "v1",
+  "scheme_label": "Mescalero Pilot Cover Scheme v1",
+  "source_authority": "local_approved",
+  "source_document_reference": "docs/mescalero-cover-type-definitions.md",
+  "geographic_applicability": "Mescalero Apache Reservation only — not a default for other Tribes, BIA programs, project areas, or geographies",
+  "approved_by": "user",
+  "approved_at_utc": "2025-01-01T00:00:00+00:00",
+  "approval_record": null,
+  "woodland_is_forest_land": true,
+  "nonstocked_policy": "NT (Non-stocked Timber) and NW (Non-stocked Woodland) are candidate forest land. Low current tree-crown percentage does not convert approved nonstocked forest land into candidate nonforest. Current vegetation structure and forest-land designation are represented separately.",
+  "one_primary_class_only": true,
+  "forest_land_policy_notes": "For the Mescalero pilot: timberland, woodland, and other forest-cover types are candidate forest land. NT and NW are candidate forest land. MapCP must not infer tree-growing capability, productivity, commercial status, or forest-land designation from LANDFIRE alone.",
+  "classes": [
+    {
+      "candidate_code": "P",
+      "candidate_name": "Ponderosa Pine",
+      "first_pass_candidate_label": "candidate_P",
+      "candidate_forest_land": true,
+      "structure_group": "timberland",
+      "local_definition_summary": "Forest areas in which PIPO is the predominant timber species and makes up at least 75% of the total crown cover of timber species.",
+      "source_measurability": "not_directly_measurable",
+      "first_pass_assignment_status": "assignable",
+      "first_pass_output_code": null,
+      "review_flags_required": [
+        "species_composition_not_directly_measured",
+        "crown_cover_percentage_not_directly_measured",
+        "overstory_understory_not_modeled",
+        "professional_forestry_review_required"
+      ],
+      "protected_from_generalization_merge": false,
+      "notes": null
+    },
+    {
+      "candidate_code": "PM",
+      "candidate_name": "Pine Mixed",
+      "first_pass_candidate_label": "candidate_PM",
+      "candidate_forest_land": true,
+      "structure_group": "timberland",
+      "local_definition_summary": "Forest areas in which 40 to 75% of the total crown cover in timber species is PIPO and the remainder is in any combination of PSME, PIST, ABCO, PIEN, PIPU, POTR, ABLA, or other incidental species. PSME, ABCO, or PIST must be present.",
+      "source_measurability": "not_directly_measurable",
+      "first_pass_assignment_status": "assignable",
+      "first_pass_output_code": null,
+      "review_flags_required": [
+        "species_composition_not_directly_measured",
+        "crown_cover_percentage_not_directly_measured",
+        "overstory_understory_not_modeled",
+        "professional_forestry_review_required"
+      ],
+      "protected_from_generalization_merge": false,
+      "notes": null
+    },
+    {
+      "candidate_code": "MC",
+      "candidate_name": "Mixed Conifer",
+      "first_pass_candidate_label": "candidate_MC",
+      "candidate_forest_land": true,
+      "structure_group": "timberland",
+      "local_definition_summary": "Forest areas in which less than 40% of the timber crown cover is PIPO and most of the crown cover in timber species is in any combination of at least three of PSME, PIST, PIPO, ABCO, PIEN, PIPU, POTR, ABLA, or other incidental species. PSME, ABCO, or PIST must be present.",
+      "source_measurability": "not_directly_measurable",
+      "first_pass_assignment_status": "assignable",
+      "first_pass_output_code": null,
+      "review_flags_required": [
+        "species_composition_not_directly_measured",
+        "crown_cover_percentage_not_directly_measured",
+        "overstory_understory_not_modeled",
+        "professional_forestry_review_required"
+      ],
+      "protected_from_generalization_merge": false,
+      "notes": null
+    },
+    {
+      "candidate_code": "DF",
+      "candidate_name": "Douglas-fir",
+      "first_pass_candidate_label": "candidate_DF",
+      "candidate_forest_land": true,
+      "structure_group": "timberland",
+      "local_definition_summary": "Forest areas in which Douglas-fir is the predominant timber species and makes up at least 60% of total crown cover of timber species.",
+      "source_measurability": "not_directly_measurable",
+      "first_pass_assignment_status": "assignable",
+      "first_pass_output_code": null,
+      "review_flags_required": [
+        "species_composition_not_directly_measured",
+        "crown_cover_percentage_not_directly_measured",
+        "overstory_understory_not_modeled",
+        "professional_forestry_review_required"
+      ],
+      "protected_from_generalization_merge": false,
+      "notes": null
+    },
+    {
+      "candidate_code": "WF",
+      "candidate_name": "White Fir",
+      "first_pass_candidate_label": "candidate_WF",
+      "candidate_forest_land": true,
+      "structure_group": "timberland",
+      "local_definition_summary": "Forest areas where ABCO is the only timber species present, or where ABCO and one other timber species are present, with specific ABCO crown-cover thresholds depending on the companion species.",
+      "source_measurability": "not_directly_measurable",
+      "first_pass_assignment_status": "assignable",
+      "first_pass_output_code": null,
+      "review_flags_required": [
+        "species_composition_not_directly_measured",
+        "crown_cover_percentage_not_directly_measured",
+        "overstory_understory_not_modeled",
+        "professional_forestry_review_required"
+      ],
+      "protected_from_generalization_merge": false,
+      "notes": null
+    },
+    {
+      "candidate_code": "A",
+      "candidate_name": "Aspen",
+      "first_pass_candidate_label": "candidate_A",
+      "candidate_forest_land": true,
+      "structure_group": "timberland",
+      "local_definition_summary": "Forest areas in which 75% or more of total crown cover in timber species is POTR.",
+      "source_measurability": "not_directly_measurable",
+      "first_pass_assignment_status": "assignable",
+      "first_pass_output_code": null,
+      "review_flags_required": [
+        "species_composition_not_directly_measured",
+        "crown_cover_percentage_not_directly_measured",
+        "overstory_understory_not_modeled",
+        "professional_forestry_review_required"
+      ],
+      "protected_from_generalization_merge": false,
+      "notes": null
+    },
+    {
+      "candidate_code": "BS",
+      "candidate_name": "Blue Spruce",
+      "first_pass_candidate_label": "candidate_BS",
+      "candidate_forest_land": true,
+      "structure_group": "timberland",
+      "local_definition_summary": "Forest areas in which 75% or more of total crown cover in timber species is PIPU.",
+      "source_measurability": "not_directly_measurable",
+      "first_pass_assignment_status": "assignable",
+      "first_pass_output_code": null,
+      "review_flags_required": [
+        "species_composition_not_directly_measured",
+        "crown_cover_percentage_not_directly_measured",
+        "overstory_understory_not_modeled",
+        "professional_forestry_review_required"
+      ],
+      "protected_from_generalization_merge": false,
+      "notes": null
+    },
+    {
+      "candidate_code": "ES",
+      "candidate_name": "Engelmann Spruce",
+      "first_pass_candidate_label": "candidate_ES",
+      "candidate_forest_land": true,
+      "structure_group": "timberland",
+      "local_definition_summary": "Forest areas in which 75% or more of total crown cover in timber species is PIEN.",
+      "source_measurability": "not_directly_measurable",
+      "first_pass_assignment_status": "assignable",
+      "first_pass_output_code": null,
+      "review_flags_required": [
+        "species_composition_not_directly_measured",
+        "crown_cover_percentage_not_directly_measured",
+        "overstory_understory_not_modeled",
+        "professional_forestry_review_required"
+      ],
+      "protected_from_generalization_merge": false,
+      "notes": null
+    },
+    {
+      "candidate_code": "SF",
+      "candidate_name": "Spruce-Fir",
+      "first_pass_candidate_label": "candidate_SF",
+      "candidate_forest_land": true,
+      "structure_group": "timberland",
+      "local_definition_summary": "Forest areas in which 75% or more of total crown cover in timber species is any combination of PIEN, ABLA, and PIPU.",
+      "source_measurability": "not_directly_measurable",
+      "first_pass_assignment_status": "assignable",
+      "first_pass_output_code": null,
+      "review_flags_required": [
+        "species_composition_not_directly_measured",
+        "crown_cover_percentage_not_directly_measured",
+        "overstory_understory_not_modeled",
+        "professional_forestry_review_required"
+      ],
+      "protected_from_generalization_merge": false,
+      "notes": null
+    },
+    {
+      "candidate_code": "NT",
+      "candidate_name": "Non-stocked Timber",
+      "first_pass_candidate_label": "candidate_NT",
+      "candidate_forest_land": true,
+      "structure_group": "nonstocked_timberland",
+      "local_definition_summary": "Non-stocked commercial timberland with less than 10% total crown cover in timber species. NT is candidate forest land regardless of low current canopy.",
+      "source_measurability": "approximate_via_evt_evc_evh",
+      "first_pass_assignment_status": "assignable",
+      "first_pass_output_code": null,
+      "review_flags_required": [
+        "candidate_nonstocked_timberland",
+        "current_structure_low_or_sparse",
+        "overstory_understory_not_modeled",
+        "professional_forestry_review_required"
+      ],
+      "protected_from_generalization_merge": true,
+      "notes": "Low current canopy does not convert NT to nonforest. Per approved Mescalero policy."
+    },
+    {
+      "candidate_code": "AT",
+      "candidate_name": "Alpine Transition",
+      "first_pass_candidate_label": "candidate_AT",
+      "candidate_forest_land": true,
+      "structure_group": "timberland",
+      "local_definition_summary": "Forest land occurring at higher elevations, usually above 11,500 feet. Lightly stocked with PIEN, ABLA, and other species.",
+      "source_measurability": "approximate_via_evt",
+      "first_pass_assignment_status": "assignable",
+      "first_pass_output_code": null,
+      "review_flags_required": [
+        "species_composition_not_directly_measured",
+        "overstory_understory_not_modeled",
+        "professional_forestry_review_required"
+      ],
+      "protected_from_generalization_merge": false,
+      "notes": null
+    },
+    {
+      "candidate_code": "PJ",
+      "candidate_name": "Pinyon and Juniper",
+      "first_pass_candidate_label": "candidate_PJ",
+      "candidate_forest_land": true,
+      "structure_group": "woodland",
+      "local_definition_summary": "Forest lands in which 75% or more of crown cover is made up of a combination of pinyon pine and various juniper species. The juniper component is less than 75% of the pinyon/juniper crown cover.",
+      "source_measurability": "not_directly_measurable",
+      "first_pass_assignment_status": "assignable",
+      "first_pass_output_code": null,
+      "review_flags_required": [
+        "species_composition_not_directly_measured",
+        "crown_cover_percentage_not_directly_measured",
+        "overstory_understory_not_modeled",
+        "professional_forestry_review_required"
+      ],
+      "protected_from_generalization_merge": false,
+      "notes": null
+    },
+    {
+      "candidate_code": "W",
+      "candidate_name": "Juniper",
+      "first_pass_candidate_label": "candidate_W",
+      "candidate_forest_land": true,
+      "structure_group": "woodland",
+      "local_definition_summary": "Forest lands in which 75% or more of crown cover is made up of juniper species.",
+      "source_measurability": "not_directly_measurable",
+      "first_pass_assignment_status": "assignable",
+      "first_pass_output_code": null,
+      "review_flags_required": [
+        "species_composition_not_directly_measured",
+        "crown_cover_percentage_not_directly_measured",
+        "overstory_understory_not_modeled",
+        "professional_forestry_review_required"
+      ],
+      "protected_from_generalization_merge": false,
+      "notes": null
+    },
+    {
+      "candidate_code": "CO",
+      "candidate_name": "Cottonwood",
+      "first_pass_candidate_label": "candidate_RIP_WOODY",
+      "candidate_forest_land": true,
+      "structure_group": "riparian_woody_forest",
+      "local_definition_summary": "Riparian forest lands in which 75% or more of crown cover is made up of riparian Populus species. Not individually assigned in first pass; routed to RIP_WOODY.",
+      "source_measurability": "not_directly_measurable",
+      "first_pass_assignment_status": "consolidated_to_broader_class",
+      "first_pass_output_code": "RIP_WOODY",
+      "review_flags_required": [
+        "riparian_subtype_not_resolved",
+        "species_review_required",
+        "species_composition_not_directly_measured",
+        "professional_forestry_review_required"
+      ],
+      "protected_from_generalization_merge": true,
+      "notes": "Local target class. Not assigned individually in first pass. EVT-NVC or other approved source required for CO subtype."
+    },
+    {
+      "candidate_code": "RO",
+      "candidate_name": "Russian Olive",
+      "first_pass_candidate_label": "candidate_RIP_WOODY",
+      "candidate_forest_land": true,
+      "structure_group": "riparian_woody_forest",
+      "local_definition_summary": "Riparian forest lands in which 75% or more of crown cover is made up of Russian Olive, Elaeagnus angustifolia. Not individually assigned in first pass; routed to RIP_WOODY.",
+      "source_measurability": "not_directly_measurable",
+      "first_pass_assignment_status": "consolidated_to_broader_class",
+      "first_pass_output_code": "RIP_WOODY",
+      "review_flags_required": [
+        "riparian_subtype_not_resolved",
+        "species_review_required",
+        "species_composition_not_directly_measured",
+        "professional_forestry_review_required"
+      ],
+      "protected_from_generalization_merge": true,
+      "notes": "Local target class. Not assigned individually in first pass."
+    },
+    {
+      "candidate_code": "SC",
+      "candidate_name": "Salt Cedar",
+      "first_pass_candidate_label": "candidate_RIP_WOODY",
+      "candidate_forest_land": true,
+      "structure_group": "riparian_woody_forest",
+      "local_definition_summary": "Riparian forest lands in which 75% or more of crown cover is made up of salt cedar, Tamarix pentandra. Not individually assigned in first pass; routed to RIP_WOODY.",
+      "source_measurability": "not_directly_measurable",
+      "first_pass_assignment_status": "consolidated_to_broader_class",
+      "first_pass_output_code": "RIP_WOODY",
+      "review_flags_required": [
+        "riparian_subtype_not_resolved",
+        "species_review_required",
+        "species_composition_not_directly_measured",
+        "professional_forestry_review_required"
+      ],
+      "protected_from_generalization_merge": true,
+      "notes": "Local target class. Not assigned individually in first pass."
+    },
+    {
+      "candidate_code": "WI",
+      "candidate_name": "Willow",
+      "first_pass_candidate_label": "candidate_RIP_WOODY",
+      "candidate_forest_land": true,
+      "structure_group": "riparian_woody_forest",
+      "local_definition_summary": "Riparian forest lands in which 75% or more of crown cover is made up of riparian Salix species. Not individually assigned in first pass; routed to RIP_WOODY.",
+      "source_measurability": "not_directly_measurable",
+      "first_pass_assignment_status": "consolidated_to_broader_class",
+      "first_pass_output_code": "RIP_WOODY",
+      "review_flags_required": [
+        "riparian_subtype_not_resolved",
+        "species_review_required",
+        "species_composition_not_directly_measured",
+        "professional_forestry_review_required"
+      ],
+      "protected_from_generalization_merge": true,
+      "notes": "Local target class. Not assigned individually in first pass."
+    },
+    {
+      "candidate_code": "NW",
+      "candidate_name": "Non-stocked Woodland",
+      "first_pass_candidate_label": "candidate_NW",
+      "candidate_forest_land": true,
+      "structure_group": "nonstocked_woodland",
+      "local_definition_summary": "Non-stocked woodland with less than 10% total crown cover in woodland species. NW is candidate forest land regardless of low current canopy.",
+      "source_measurability": "approximate_via_evt_evc_evh",
+      "first_pass_assignment_status": "assignable",
+      "first_pass_output_code": null,
+      "review_flags_required": [
+        "candidate_nonstocked_woodland",
+        "current_structure_low_or_sparse",
+        "overstory_understory_not_modeled",
+        "professional_forestry_review_required"
+      ],
+      "protected_from_generalization_merge": true,
+      "notes": "Low current canopy does not convert NW to nonforest. Per approved Mescalero policy."
+    },
+    {
+      "candidate_code": "B",
+      "candidate_name": "Bosque Mixed",
+      "first_pass_candidate_label": "candidate_RIP_WOODY",
+      "candidate_forest_land": true,
+      "structure_group": "riparian_woody_forest",
+      "local_definition_summary": "Forest lands in which crown cover is made up of a mix of riparian vegetation consisting of POPU, SALIX, and other species components. Not individually assigned in first pass; routed to RIP_WOODY.",
+      "source_measurability": "not_directly_measurable",
+      "first_pass_assignment_status": "consolidated_to_broader_class",
+      "first_pass_output_code": "RIP_WOODY",
+      "review_flags_required": [
+        "riparian_subtype_not_resolved",
+        "species_review_required",
+        "species_composition_not_directly_measured",
+        "professional_forestry_review_required"
+      ],
+      "protected_from_generalization_merge": true,
+      "notes": "B (Bosque Mixed) is a specific local type requiring supporting POPU/SALIX evidence. Not assigned without that evidence."
+    },
+    {
+      "candidate_code": "IH",
+      "candidate_name": "Intermountain Hardwoods",
+      "first_pass_candidate_label": "candidate_IH",
+      "candidate_forest_land": true,
+      "structure_group": "woodland",
+      "local_definition_summary": "Forest lands in which predominant crown cover is made up of a combination of ACER, QUER, and FRAX.",
+      "source_measurability": "not_directly_measurable",
+      "first_pass_assignment_status": "assignable",
+      "first_pass_output_code": null,
+      "review_flags_required": [
+        "species_composition_not_directly_measured",
+        "crown_cover_percentage_not_directly_measured",
+        "overstory_understory_not_modeled",
+        "professional_forestry_review_required"
+      ],
+      "protected_from_generalization_merge": false,
+      "notes": null
+    },
+    {
+      "candidate_code": "OK",
+      "candidate_name": "Oak",
+      "first_pass_candidate_label": "candidate_OK",
+      "candidate_forest_land": true,
+      "structure_group": "woodland",
+      "local_definition_summary": "Land consisting primarily of Gambel oak crown cover.",
+      "source_measurability": "approximate_via_evt",
+      "first_pass_assignment_status": "assignable",
+      "first_pass_output_code": null,
+      "review_flags_required": [
+        "species_composition_not_directly_measured",
+        "overstory_understory_not_modeled",
+        "professional_forestry_review_required"
+      ],
+      "protected_from_generalization_merge": false,
+      "notes": null
+    },
+    {
+      "candidate_code": "G",
+      "candidate_name": "Grass",
+      "first_pass_candidate_label": "candidate_G",
+      "candidate_forest_land": false,
+      "structure_group": "nonforest",
+      "local_definition_summary": "Open nonforested land with a vadose ecosystem yielding significant amounts of graminoid vegetation.",
+      "source_measurability": "approximate_via_evt",
+      "first_pass_assignment_status": "assignable",
+      "first_pass_output_code": null,
+      "review_flags_required": [
+        "professional_forestry_review_required"
+      ],
+      "protected_from_generalization_merge": false,
+      "notes": null
+    },
+    {
+      "candidate_code": "O",
+      "candidate_name": "Barren",
+      "first_pass_candidate_label": "candidate_O",
+      "candidate_forest_land": false,
+      "structure_group": "nonforest",
+      "local_definition_summary": "Land containing little or no vegetative cover; for example, land that is 90% barren.",
+      "source_measurability": "approximate_via_evt",
+      "first_pass_assignment_status": "assignable",
+      "first_pass_output_code": null,
+      "review_flags_required": [
+        "professional_forestry_review_required"
+      ],
+      "protected_from_generalization_merge": false,
+      "notes": null
+    },
+    {
+      "candidate_code": "NR",
+      "candidate_name": "Non-commercial Rocky",
+      "first_pass_candidate_label": "candidate_NR",
+      "candidate_forest_land": false,
+      "structure_group": "nonforest",
+      "local_definition_summary": "Land consisting predominantly of rocky ground cover to an extent where vegetative growth is severely inhibited.",
+      "source_measurability": "approximate_via_evt",
+      "first_pass_assignment_status": "assignable",
+      "first_pass_output_code": null,
+      "review_flags_required": [
+        "professional_forestry_review_required"
+      ],
+      "protected_from_generalization_merge": false,
+      "notes": null
+    },
+    {
+      "candidate_code": "R",
+      "candidate_name": "Riparian Vegetation",
+      "first_pass_candidate_label": "candidate_RIP_NONFOREST",
+      "candidate_forest_land": false,
+      "structure_group": "riparian_nonforest",
+      "local_definition_summary": "Nonforested areas, other than Bosque, that support a phreatic ecosystem. Not independently assigned in first pass; routed to RIP_NONFOREST.",
+      "source_measurability": "approximate_via_evt",
+      "first_pass_assignment_status": "consolidated_to_broader_class",
+      "first_pass_output_code": "RIP_NONFOREST",
+      "review_flags_required": [
+        "riparian_subtype_not_resolved",
+        "professional_forestry_review_required"
+      ],
+      "protected_from_generalization_merge": true,
+      "notes": "R is candidate nonforest. Not assigned as candidate_R in first pass."
+    },
+    {
+      "candidate_code": "AG",
+      "candidate_name": "Agriculture",
+      "first_pass_candidate_label": "candidate_AG",
+      "candidate_forest_land": false,
+      "structure_group": "nonforest",
+      "local_definition_summary": "Agricultural land used for growing crops other than grass.",
+      "source_measurability": "approximate_via_evt",
+      "first_pass_assignment_status": "assignable",
+      "first_pass_output_code": null,
+      "review_flags_required": [
+        "professional_forestry_review_required"
+      ],
+      "protected_from_generalization_merge": false,
+      "notes": null
+    },
+    {
+      "candidate_code": "U",
+      "candidate_name": "Urban",
+      "first_pass_candidate_label": "candidate_U",
+      "candidate_forest_land": false,
+      "structure_group": "nonforest",
+      "local_definition_summary": "Land developed for commercial and/or residential purposes.",
+      "source_measurability": "approximate_via_evt",
+      "first_pass_assignment_status": "assignable",
+      "first_pass_output_code": null,
+      "review_flags_required": [
+        "professional_forestry_review_required"
+      ],
+      "protected_from_generalization_merge": false,
+      "notes": null
+    },
+    {
+      "candidate_code": "BR",
+      "candidate_name": "Brush",
+      "first_pass_candidate_label": "candidate_BR",
+      "candidate_forest_land": false,
+      "structure_group": "nonforest",
+      "local_definition_summary": "Land areas supporting brush cover such as sagebrush, oak brush, or other brushy species.",
+      "source_measurability": "approximate_via_evt",
+      "first_pass_assignment_status": "assignable",
+      "first_pass_output_code": null,
+      "review_flags_required": [
+        "professional_forestry_review_required"
+      ],
+      "protected_from_generalization_merge": false,
+      "notes": null
+    },
+    {
+      "candidate_code": "WA",
+      "candidate_name": "Water",
+      "first_pass_candidate_label": "candidate_WA",
+      "candidate_forest_land": false,
+      "structure_group": "nonforest",
+      "local_definition_summary": "Water.",
+      "source_measurability": "approximate_via_evt",
+      "first_pass_assignment_status": "assignable",
+      "first_pass_output_code": null,
+      "review_flags_required": [
+        "professional_forestry_review_required"
+      ],
+      "protected_from_generalization_merge": true,
+      "notes": null
+    },
+    {
+      "candidate_code": "RIP_WOODY",
+      "candidate_name": "Candidate Riparian Woody Forest (consolidated first-pass output)",
+      "first_pass_candidate_label": "candidate_RIP_WOODY",
+      "candidate_forest_land": true,
+      "structure_group": "riparian_woody_forest",
+      "local_definition_summary": "Consolidated first-pass riparian woody forest output. CO, RO, SC, WI, and B are routed here. Species subtype is not resolved in first pass.",
+      "source_measurability": "approximate_via_evt",
+      "first_pass_assignment_status": "assignable",
+      "first_pass_output_code": null,
+      "review_flags_required": [
+        "riparian_subtype_not_resolved",
+        "species_review_required",
+        "professional_forestry_review_required"
+      ],
+      "protected_from_generalization_merge": true,
+      "notes": "Not a local Mescalero target code. First-pass consolidation output only. Later approved riparian refinement required for CO/RO/SC/WI/B subtyping."
+    },
+    {
+      "candidate_code": "RIP_NONFOREST",
+      "candidate_name": "Candidate Riparian Nonforest (consolidated first-pass output)",
+      "first_pass_candidate_label": "candidate_RIP_NONFOREST",
+      "candidate_forest_land": false,
+      "structure_group": "riparian_nonforest",
+      "local_definition_summary": "Consolidated first-pass nonforested riparian output. R (Riparian Vegetation) is routed here.",
+      "source_measurability": "approximate_via_evt",
+      "first_pass_assignment_status": "assignable",
+      "first_pass_output_code": null,
+      "review_flags_required": [
+        "riparian_subtype_not_resolved",
+        "professional_forestry_review_required"
+      ],
+      "protected_from_generalization_merge": true,
+      "notes": "Not a local Mescalero target code. First-pass consolidation output only."
+    },
+    {
+      "candidate_code": "RIP_UNCERTAIN",
+      "candidate_name": "Candidate Riparian Uncertain (consolidated first-pass output)",
+      "first_pass_candidate_label": "candidate_RIP_UNCERTAIN",
+      "candidate_forest_land": null,
+      "structure_group": "riparian_uncertain",
+      "local_definition_summary": "Consolidated first-pass riparian uncertain output. Forest-land status unknown. Used for unsupported, mixed, conflicting, or NoData riparian evidence.",
+      "source_measurability": "approximate_via_evt",
+      "first_pass_assignment_status": "assignable",
+      "first_pass_output_code": null,
+      "review_flags_required": [
+        "riparian_subtype_not_resolved",
+        "nodata_or_unknown_coverage",
+        "professional_forestry_review_required"
+      ],
+      "protected_from_generalization_merge": true,
+      "notes": "candidate_forest_land is null — forest-land status is unknown. null is not the same as false."
+    }
+  ],
+  "limitations": [
+    "Species-composition and crown-cover criteria cannot be directly measured from LANDFIRE EVT, EVC, or EVH.",
+    "Initial mapping assigns one primary candidate cover type only.",
+    "Overstory/understory typing is not modeled in the first pass.",
+    "EVT-NVC alliance information is not assumed to be available in the current LFPS bundle; evt_nvc_group fields in crosswalk entries must remain null until a separately approved EVT-NVC source is collected and validated.",
+    "Riparian species subtypes (CO, RO, SC, WI, B) are not individually assigned in the first pass.",
+    "Disturbance product not used in first pass: disturbance_treatment = not_evaluated.",
+    "Candidate outputs are preliminary and require professional forestry review.",
+    "These definitions apply to the Mescalero Apache Reservation only and are not defaults for any other Tribe, BIA program, project area, or geography."
+  ],
+  "change_control": "Changes to this scheme require a new version file (e.g., mescalero_v1_cover_scheme_v2.json). Do not overwrite approved definitions. Changes require explicit user approval."
+}

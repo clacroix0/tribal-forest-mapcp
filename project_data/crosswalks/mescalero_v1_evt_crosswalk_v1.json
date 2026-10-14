@@ -1,0 +1,230 @@
+{
+  "crosswalk_id": "mescalero_v1_evt_crosswalk_v1",
+  "crosswalk_version": "v1",
+  "cover_scheme_id": "mescalero_v1",
+  "cover_scheme_version": "v1",
+  "source_product": "LF2025_EVT",
+  "approved_by": "user",
+  "crosswalk_approval_note": "17-code EVT crosswalk approved by user in MapCP planning session (Slice 3). 7107 assigned to BR (oak_brush_vs_oak_woodland_review_required). 7024 retained as candidate_UNCERTAIN_PINE_OAK with integer code 8 (pine_oak_local_type_unresolved, forest-land unknown). 9329, 9519, 9535 assigned to RIP_UNCERTAIN (riparian_forest_land_status_unresolved). No EVC/EVH classification thresholds approved. Disturbance not evaluated. Integer 8 approved for candidate_UNCERTAIN_PINE_OAK.",
+  "geographic_applicability": "Mescalero Apache Reservation pilot only — not a default for any other Tribe, BIA program, or geography",
+  "evt_add_url": "https://landfire.gov/sites/default/files/CSV/LF2025/LF2025_EVT.csv",
+  "evt_add_sha256": "5ccc130b250dbe709340afb2cc02ecdb3c4c374e2dba19cec91e2c2713e4963d",
+  "nodata_value": -9999,
+  "unmapped_valid_output_code": 255,
+  "output_code_table": [
+    {"output_code": 1,    "output_label": "candidate_P",                   "candidate_forest_land": true,  "description": "Candidate Ponderosa Pine"},
+    {"output_code": 2,    "output_label": "candidate_PJ",                  "candidate_forest_land": true,  "description": "Candidate Pinyon and Juniper"},
+    {"output_code": 3,    "output_label": "candidate_RIP_WOODY",           "candidate_forest_land": true,  "description": "Candidate Riparian Woody Forest (consolidated)"},
+    {"output_code": 4,    "output_label": "candidate_BR",                  "candidate_forest_land": false, "description": "Candidate Brush"},
+    {"output_code": 5,    "output_label": "candidate_G",                   "candidate_forest_land": false, "description": "Candidate Grass"},
+    {"output_code": 6,    "output_label": "candidate_RIP_NONFOREST",       "candidate_forest_land": false, "description": "Candidate Riparian Nonforest (consolidated)"},
+    {"output_code": 7,    "output_label": "candidate_RIP_UNCERTAIN",       "candidate_forest_land": null,  "description": "Candidate Riparian Uncertain — forest-land status unknown"},
+    {"output_code": 8,    "output_label": "candidate_UNCERTAIN_PINE_OAK",  "candidate_forest_land": null,  "description": "Uncertain/mixed pine-oak — local type unresolved, forest-land unknown. Not a Mescalero target type."},
+    {"output_code": 255,  "output_label": "unmapped_evt",                  "candidate_forest_land": null,  "description": "Valid EVT code not in approved crosswalk — preserve for review"},
+    {"output_code": -9999,"output_label": "nodata",                        "candidate_forest_land": null,  "description": "EVT NoData — distinct from uncertain and nonforest"}
+  ],
+  "forest_land_raster_code_table": [
+    {"raster_code": 1,    "meaning": "candidate_forest_land_true"},
+    {"raster_code": 0,    "meaning": "candidate_forest_land_false"},
+    {"raster_code": 2,    "meaning": "candidate_forest_land_unknown"},
+    {"raster_code": -9999,"meaning": "nodata"}
+  ],
+  "entries": [
+    {
+      "evt_code": 7024,
+      "evt_name": "Madrean Lower Montane Pine-Oak Forest and Woodland",
+      "evt_lf": "Tree",
+      "evt_phys": "Conifer-Hardwood",
+      "output_label": "candidate_UNCERTAIN_PINE_OAK",
+      "output_code": 8,
+      "candidate_forest_land": null,
+      "rationale": "Tree/conifer-hardwood evidence but source does not establish local timber-species proportions required for P, PM, or MC. Preserve for professional review.",
+      "review_flags": ["pine_oak_local_type_unresolved", "overstory_understory_not_modeled", "disturbance_not_evaluated", "professional_forestry_review_required"]
+    },
+    {
+      "evt_code": 7025,
+      "evt_name": "Madrean Pinyon-Juniper Woodland",
+      "evt_lf": "Tree",
+      "evt_phys": "Conifer",
+      "output_label": "candidate_PJ",
+      "output_code": 2,
+      "candidate_forest_land": true,
+      "rationale": "Pinyon-juniper source name and conifer/tree evidence support preliminary PJ. Local species-specific crown-cover proportions remain unmeasured.",
+      "review_flags": ["species_composition_not_directly_measured", "crown_cover_percentage_not_directly_measured", "overstory_understory_not_modeled", "disturbance_not_evaluated", "professional_forestry_review_required"]
+    },
+    {
+      "evt_code": 7054,
+      "evt_name": "Southern Rocky Mountain Ponderosa Pine Woodland",
+      "evt_lf": "Tree",
+      "evt_phys": "Conifer",
+      "output_label": "candidate_P",
+      "output_code": 1,
+      "candidate_forest_land": true,
+      "rationale": "Ponderosa-pine source name and conifer/tree evidence support preliminary P. The local 75% ponderosa proportion criterion remains unmeasured.",
+      "review_flags": ["species_composition_not_directly_measured", "crown_cover_percentage_not_directly_measured", "overstory_understory_not_modeled", "disturbance_not_evaluated", "professional_forestry_review_required"]
+    },
+    {
+      "evt_code": 7086,
+      "evt_name": "Rocky Mountain Lower Montane-Foothill Shrubland",
+      "evt_lf": "Shrub",
+      "evt_phys": "Shrubland",
+      "output_label": "candidate_BR",
+      "output_code": 4,
+      "candidate_forest_land": false,
+      "rationale": "Shrub/shrubland source evidence supports preliminary brush. No prior forest designation inferred.",
+      "review_flags": ["overstory_understory_not_modeled", "disturbance_not_evaluated", "professional_forestry_review_required"]
+    },
+    {
+      "evt_code": 7104,
+      "evt_name": "Mogollon Chaparral",
+      "evt_lf": "Shrub",
+      "evt_phys": "Shrubland",
+      "output_label": "candidate_BR",
+      "output_code": 4,
+      "candidate_forest_land": false,
+      "rationale": "Shrub/chaparral source evidence supports preliminary brush. Do not infer a specific woodland species class.",
+      "review_flags": ["overstory_understory_not_modeled", "disturbance_not_evaluated", "professional_forestry_review_required"]
+    },
+    {
+      "evt_code": 7107,
+      "evt_name": "Rocky Mountain Gambel Oak-Mixed Montane Shrubland",
+      "evt_lf": "Shrub",
+      "evt_phys": "Shrubland",
+      "output_label": "candidate_BR",
+      "output_code": 4,
+      "candidate_forest_land": false,
+      "rationale": "Forester explicitly selected BR for this first pass. Reviewer may revise to OK if warranted.",
+      "review_flags": ["oak_brush_vs_oak_woodland_review_required", "overstory_understory_not_modeled", "disturbance_not_evaluated", "professional_forestry_review_required"]
+    },
+    {
+      "evt_code": 7121,
+      "evt_name": "Apacherian-Chihuahuan Semi-Desert Shrub-Steppe",
+      "evt_lf": "Shrub",
+      "evt_phys": "Shrubland",
+      "output_label": "candidate_BR",
+      "output_code": 4,
+      "candidate_forest_land": false,
+      "rationale": "Source lifeform is shrub. Shrub-grass mixture preserved in source attributes. Not merged with herbaceous code 7256.",
+      "review_flags": ["shrub_grass_mixture_not_resolved", "overstory_understory_not_modeled", "disturbance_not_evaluated", "professional_forestry_review_required"]
+    },
+    {
+      "evt_code": 7146,
+      "evt_name": "Southern Rocky Mountain Montane-Subalpine Grassland",
+      "evt_lf": "Herb",
+      "evt_phys": "Grassland",
+      "output_label": "candidate_G",
+      "output_code": 5,
+      "candidate_forest_land": false,
+      "rationale": "Herb/grassland evidence supports preliminary grass. AT or NT not inferred from elevation context.",
+      "review_flags": ["overstory_understory_not_modeled", "disturbance_not_evaluated", "professional_forestry_review_required"]
+    },
+    {
+      "evt_code": 7256,
+      "evt_name": "Apacherian-Chihuahuan Semi-Desert Grassland",
+      "evt_lf": "Herb",
+      "evt_phys": "Grassland",
+      "output_label": "candidate_G",
+      "output_code": 5,
+      "candidate_forest_land": false,
+      "rationale": "Herb/grassland source evidence supports preliminary grass.",
+      "review_flags": ["overstory_understory_not_modeled", "disturbance_not_evaluated", "professional_forestry_review_required"]
+    },
+    {
+      "evt_code": 9017,
+      "evt_name": "Rocky Mountain Alpine-Montane Wet Meadow",
+      "evt_lf": "Herb",
+      "evt_phys": "Riparian",
+      "output_label": "candidate_RIP_NONFOREST",
+      "output_code": 6,
+      "candidate_forest_land": false,
+      "rationale": "Herb lifeform and riparian physiognomy support consolidated herbaceous-riparian output.",
+      "review_flags": ["riparian_feature_preserved", "overstory_understory_not_modeled", "disturbance_not_evaluated", "professional_forestry_review_required"]
+    },
+    {
+      "evt_code": 9035,
+      "evt_name": "North American Warm Desert Lower Montane Riparian Woodland",
+      "evt_lf": "Tree",
+      "evt_phys": "Riparian",
+      "output_label": "candidate_RIP_WOODY",
+      "output_code": 3,
+      "candidate_forest_land": true,
+      "rationale": "Tree lifeform and riparian woodland evidence support broad candidate woody-riparian forest. CO, WI, RO, SC, or B not assigned individually.",
+      "review_flags": ["riparian_feature_preserved", "riparian_subtype_not_resolved", "species_composition_not_directly_measured", "crown_cover_percentage_not_directly_measured", "overstory_understory_not_modeled", "disturbance_not_evaluated", "professional_forestry_review_required"]
+    },
+    {
+      "evt_code": 9329,
+      "evt_name": "Western North American Ruderal Wet Shrubland",
+      "evt_lf": "Shrub",
+      "evt_phys": "Riparian",
+      "output_label": "candidate_RIP_UNCERTAIN",
+      "output_code": 7,
+      "candidate_forest_land": null,
+      "rationale": "Shrub/riparian evidence does not resolve local forested versus nonforested riparian definition.",
+      "review_flags": ["riparian_feature_preserved", "riparian_forest_land_status_unresolved", "ruderal_source_class", "overstory_understory_not_modeled", "disturbance_not_evaluated", "professional_forestry_review_required"]
+    },
+    {
+      "evt_code": 9519,
+      "evt_name": "Rocky Mountain Lower Montane-Foothill Riparian Shrubland",
+      "evt_lf": "Shrub",
+      "evt_phys": "Riparian",
+      "output_label": "candidate_RIP_UNCERTAIN",
+      "output_code": 7,
+      "candidate_forest_land": null,
+      "rationale": "Woody shrubland evidence does not establish qualifying local riparian forest class or forest-land status.",
+      "review_flags": ["riparian_feature_preserved", "riparian_forest_land_status_unresolved", "overstory_understory_not_modeled", "disturbance_not_evaluated", "professional_forestry_review_required"]
+    },
+    {
+      "evt_code": 9535,
+      "evt_name": "North American Warm Desert Lower Montane Riparian Shrubland",
+      "evt_lf": "Shrub",
+      "evt_phys": "Riparian",
+      "output_label": "candidate_RIP_UNCERTAIN",
+      "output_code": 7,
+      "candidate_forest_land": null,
+      "rationale": "Shrub/riparian evidence does not settle forest versus nonforest under local scheme.",
+      "review_flags": ["riparian_feature_preserved", "riparian_forest_land_status_unresolved", "overstory_understory_not_modeled", "disturbance_not_evaluated", "professional_forestry_review_required"]
+    },
+    {
+      "evt_code": 9810,
+      "evt_name": "North American Warm Desert Ruderal Planted Grassland",
+      "evt_lf": "Herb",
+      "evt_phys": "Grassland",
+      "output_label": "candidate_G",
+      "output_code": 5,
+      "candidate_forest_land": false,
+      "rationale": "Herbaceous grassland candidate. 'Planted' does not establish cultivated crops or justify AG.",
+      "review_flags": ["ruderal_source_class", "overstory_understory_not_modeled", "disturbance_not_evaluated", "professional_forestry_review_required"]
+    },
+    {
+      "evt_code": 9828,
+      "evt_name": "Interior Western North American Temperate Ruderal Grassland",
+      "evt_lf": "Herb",
+      "evt_phys": "Grassland",
+      "output_label": "candidate_G",
+      "output_code": 5,
+      "candidate_forest_land": false,
+      "rationale": "Herbaceous grassland source evidence supports preliminary grass.",
+      "review_flags": ["ruderal_source_class", "overstory_understory_not_modeled", "disturbance_not_evaluated", "professional_forestry_review_required"]
+    },
+    {
+      "evt_code": 9829,
+      "evt_name": "Western North American Ruderal Wet Meadow Marsh",
+      "evt_lf": "Herb",
+      "evt_phys": "Riparian",
+      "output_label": "candidate_RIP_NONFOREST",
+      "output_code": 6,
+      "candidate_forest_land": false,
+      "rationale": "Herb/riparian evidence supports consolidated herbaceous-riparian output. Not treated as shrub code 9329.",
+      "review_flags": ["riparian_feature_preserved", "ruderal_source_class", "overstory_understory_not_modeled", "disturbance_not_evaluated", "professional_forestry_review_required"]
+    }
+  ],
+  "universal_review_flags": [
+    "overstory_understory_not_modeled",
+    "disturbance_not_evaluated",
+    "professional_forestry_review_required"
+  ],
+  "evc_evh_policy": "No EVC/EVH classification thresholds applied. EVC and EVH are preserved as source evidence only. No candidate class or forest-land status is automatically changed based on EVC/EVH.",
+  "disturbance_policy": "disturbance_status = not_evaluated. No disturbance history, cause, recovery, or previous cover type inferred.",
+  "nt_nw_policy": "NT and NW are candidate forest land per local scheme. Neither is assigned by this 17-code crosswalk. Do not infer nonstocked forest-land from these source labels or low EVC values.",
+  "change_control": "Changes require a new crosswalk version file (e.g., mescalero_v1_evt_crosswalk_v2.json). Do not overwrite approved entries."
+}

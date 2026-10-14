@@ -1,0 +1,66 @@
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Python virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Local environment, credentials, and contact information
+.env
+.env.*
+*.local.json
+*.secrets.json
+credentials.json
+token.json
+
+# IDE and editor files
+.vscode/
+.idea/
+*.code-workspace
+
+# Operating-system files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Generated MapCP artifacts
+outputs/*
+!outputs/.gitkeep
+
+# Temporary processing folders
+tmp/
+temp/
+.cache/
+
+# Local logs
+*.log
+
+# Large accidental raster/archive files outside controlled examples
+*.part
+
+# Raster and auxiliary files (GeoTIFF, overview, auxiliary XML)
+# outputs/* already ignores all outputs/ contents;
+# these patterns guard against rasters landing elsewhere in the tree.
+*.tif
+*.tiff
+*.ovr
+*.aux.xml
+# Controlled project configuration â€” local Tribal/program definitions (Git-ignored)
+# Git-ignored by default. Copy to examples/ only after deliberate curation.
+# Never commit local approved cover schemes, crosswalks, or mapping rules.
+project_data/*
+!project_data/.gitkeep
+!project_data/**/
+!project_data/**/.gitkeep
+
+# Local manual backup
+/cover_type_generalizationbackup.py

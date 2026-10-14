@@ -1,0 +1,76 @@
+SLICE 4 — RAW CANDIDATE COVER-TYPE PATCHES
+
+Delivery status: code draft, not accepted GIS output.
+
+Placement in your LOCAL project:
+- cover_type_patches.py: beside server.py.
+- test_cover_type_patches.py: inside tests/.
+- slice4_server_addition.txt: paste its contents at the end of server.py.
+  Do not replace server.py. Do not copy the entire server from an older version.
+
+No change to cover_scheme_models.py or requirements.txt is required.
+No network requests, downloads, SciPy, smoothing or stand delineation.
+
+Approved rule: connectivity=4. Corners alone do not connect patches.
+This draft is intentionally restricted to EPSG:5070, north-up 30 m input,
+250,000 pixels and 20,000 patches. It is not a full-reservation tiled pipeline.
+
+LOCAL TEST COMMANDS (from the project folder, using your working interpreter):
+python -m pytest tests/test_cover_type_patches.py -v
+python -m pytest -q
+python -c "import server; print('Server import passed')"
+
+LOCAL ACTUAL SAMPLE RUN:
+python cover_type_patches.py cmap_3b83d63b_v1_methods.json
+
+Reads these existing outputs without altering them:
+- cmap_3b83d63b_v1_methods.json
+- cmap_3b83d63b_v1_cover_type_30m.tif
+- cmap_3b83d63b_v1_cover_type_codebook.csv
+Does not follow absolute paths embedded in the old methods JSON.
+
+Creates a NEW outputs/rawpatch_... run folder containing:
+- raw_cover_type_patches.gpkg
+  Layer: candidate_cover_type_raw_patches
+- raw_patch_acreage.csv
+- raw_patch_qc.json
+- OPEN_IN_ARCGIS_PRO.txt
+
+NoData: excluded from cover-type polygons; preserved as holes/gaps and
+separately counted in QC. This slice does not export a separate NoData layer.
+Unknown VALID values (7, 8, 255) remain distinct polygon categories.
+
+Evidence-attribute limitation:
+class_source_evt_codes is the list POSSIBLE for a class from the codebook,
+not the actual source EVT codes measured inside an individual patch.
+Review flags are a conservative union of the approved class-level flags;
+review_flag_scope records this. Actual patch-level source EVT/EVC/EVH
+summaries are not produced in this bounded draft.
+
+If validation fails before writing, the command returns a structured failure.
+If a write/read-back fails after creating a run folder, it returns failure
+and attempts to create FAILED_DO_NOT_USE.json. Do not use a partial GeoPackage.
+No automatic geometry repair is attempted.
+
+Expected SAMPLE checks from the user-provided Slice 3 record:
+1,681 valid cells; 0 NoData; 373.8457316 acres before rounding.
+Class cell counts: 1=1155, 2=257, 3=49, 4=92, 5=41, 6=37, 7=26, 8=24.
+Patch count depends on spatial adjacency and is not assumed.
+
+Tests run in Perplexity execution environment:
+23 passed; 12 skipped because Rasterio is not installed here.
+The passed checks include source-metadata checks and synthetic GeoPackage
+write/read-back. The skipped checks include polygonization, raster round-trip,
+end-to-end output generation, raster-type errors and simulated output failure.
+The appended server syntax was parsed successfully, but the actual MCP
+registration was not executed here. No real candidate TIFF was available.
+
+Local acceptance requires all 35 Slice 4 test cases to execute and pass,
+existing tests to pass, the actual TIFF run and QC to pass, and user review
+in ArcGIS Pro. Do not install dependencies automatically if any are missing.
+
+ArcGIS review:
+Add the GeoPackage polygon layer and symbolize ONE layer by output_label.
+Inspect area_acres, forest_land_status and review_flags in its table.
+Compare with the unchanged candidate TIFF; stair-step edges are intentional.
+This is raw cover-type patch delineation, not generalized polygons or stands.

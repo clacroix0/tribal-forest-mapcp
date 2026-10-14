@@ -1,0 +1,63 @@
+﻿evt_code,evt_name,acres,status,output_label,output_code,candidate_forest_land
+7026,Madrean Upper Montane Conifer-Oak Forest and Woodland,15995.7,added_in_v2,candidate_UNCERTAIN_PINE_OAK,8,unknown
+7051,Southern Rocky Mountain Dry-Mesic Montane Mixed Conifer Forest and Woodland,6038.5,added_in_v2,candidate_MC,9,true
+7149,Western Great Plains Shortgrass Prairie,4587.1,added_in_v2,candidate_G,5,false
+7059,Southern Rocky Mountain Pinyon-Juniper Woodland,2892.5,added_in_v2,candidate_PJ,2,true
+7145,Rocky Mountain Subalpine-Montane Mesic Meadow,2863.1,added_in_v2,candidate_G,5,false
+9328,Interior Western North American Temperate Ruderal Shrubland,2698.8,added_in_v2,candidate_BR,4,false
+7119,Southern Rocky Mountain Juniper Woodland and Savanna,2092.7,added_in_v2,candidate_W,11,true
+7299,Developed-Roads,1727.8,added_in_v2,candidate_U,12,false
+7011,Rocky Mountain Aspen Forest and Woodland,1529.9,added_in_v2,candidate_A,10,true
+9019,Rocky Mountain Lower Montane-Foothill Riparian Woodland,1176.2,added_in_v2,candidate_RIP_WOODY,3,true
+7023,Madrean Encinal,1066.8,added_in_v2,candidate_UNCERTAIN_PINE_OAK,8,unknown
+9011,North American Arid West Emergent Marsh,786.6,added_in_v2,candidate_RIP_NONFOREST,6,false
+7116,Madrean Juniper Savanna,741.9,added_in_v2,candidate_W,11,true
+7117,Southern Rocky Mountain Ponderosa Pine Savanna,615.4,added_in_v2,candidate_P,1,true
+7101,Madrean Oriental Chaparral,441.9,added_in_v2,candidate_BR,4,false
+7100,Chihuahuan Mixed Desert and Thornscrub,256.6,added_in_v2,candidate_BR,4,false
+7911,Western Warm Temperate Urban Evergreen Forest,200.8,added_in_v2,candidate_U,12,false
+7913,Western Warm Temperate Urban Herbaceous,129.0,added_in_v2,candidate_U,12,false
+7931,Western Warm Temperate Developed Evergreen Forest,126.3,added_in_v2,candidate_U,12,false
+7292,Open Water,122.3,added_in_v2,candidate_WA,14,false
+7296,Developed-Low Intensity,117.6,added_in_v2,candidate_U,12,false
+7980,Western Warm Temperate Orchard,94.3,added_in_v2,candidate_AG,13,false
+7933,Western Warm Temperate Developed Shrubland,89.0,added_in_v2,candidate_U,12,false
+7914,Western Warm Temperate Urban Shrubland,69.2,added_in_v2,candidate_U,12,false
+7986,Western Warm Temperate Fallow/Idle Cropland,58.3,added_in_v2,candidate_AG,13,false
+7934,Western Warm Temperate Developed Herbaceous,44.3,added_in_v2,candidate_U,12,false
+7297,Developed-Medium Intensity,37.8,added_in_v2,candidate_U,12,false
+7910,Western Warm Temperate Urban Deciduous Forest,30.2,added_in_v2,candidate_U,12,false
+7127,Inter-Mountain Basins Semi-Desert Shrub-Steppe,19.6,added_in_v2,candidate_BR,4,false
+7930,Western Warm Temperate Developed Deciduous Forest,17.8,added_in_v2,candidate_U,12,false
+9147,North American Warm Desert Bedrock Cliff and Outcrop,16.9,added_in_v2,candidate_NR,15,false
+7298,Developed-High Intensity,16.2,added_in_v2,candidate_U,12,false
+9310,North American Warm Desert Ruderal & Planted Scrub,13.6,added_in_v2,candidate_BR,4,false
+7126,Inter-Mountain Basins Montane Sagebrush Steppe,7.8,added_in_v2,candidate_BR,4,false
+7052,Southern Rocky Mountain Mesic Montane Mixed Conifer Forest and Woodland,5.8,added_in_v2,candidate_MC,9,true
+7987,Western Warm Temperate Pasture and Hayland,1.6,added_in_v2,candidate_AG,13,false
+9022,Rocky Mountain Subalpine-Montane Riparian Woodland,1.3,added_in_v2,candidate_RIP_WOODY,3,true
+9018,Rocky Mountain Cliff Canyon and Massive Bedrock,0.9,added_in_v2,candidate_NR,15,false
+9021,Rocky Mountain Subalpine-Montane Riparian Shrubland,0.9,added_in_v2,candidate_RIP_UNCERTAIN,7,unknown
+7981,Western Warm Temperate Vineyard,0.4,added_in_v2,candidate_AG,13,false
+7912,Western Warm Temperate Urban Mixed Forest,0.2,added_in_v2,candidate_U,12,false
+7932,Western Warm Temperate Developed Mixed Forest,0.2,added_in_v2,candidate_U,12,false
+7061,Inter-Mountain Basins Aspen-Mixed Conifer Forest and Woodland,2338.9,left_unmapped,unmapped_evt,255,unknown
+7057,Rocky Mountain Subalpine-Montane Limber-Bristlecone Pine Woodland,1225.2,left_unmapped,unmapped_evt,255,unknown
+7012,Rocky Mountain Bigtooth Maple Ravine Woodland,383.2,left_unmapped,unmapped_evt,255,unknown
+7054,Southern Rocky Mountain Ponderosa Pine Woodland,166881.5,v1_unchanged,candidate_P,1,true
+7025,Madrean Pinyon-Juniper Woodland,134908.0,v1_unchanged,candidate_PJ,2,true
+7256,Apacherian-Chihuahuan Semi-Desert Grassland,33140.4,v1_unchanged,candidate_G,5,false
+7107,Rocky Mountain Gambel Oak-Mixed Montane Shrubland,16660.0,v1_unchanged,candidate_BR,4,false
+7104,Mogollon Chaparral,13700.6,v1_unchanged,candidate_BR,4,false
+7121,Apacherian-Chihuahuan Semi-Desert Shrub-Steppe,12546.0,v1_unchanged,candidate_BR,4,false
+7024,Madrean Lower Montane Pine-Oak Forest and Woodland,9952.6,v1_unchanged,candidate_UNCERTAIN_PINE_OAK,8,unknown
+7086,Rocky Mountain Lower Montane-Foothill Shrubland,8011.1,v1_unchanged,candidate_BR,4,false
+9829,Western North American Ruderal Wet Meadow & Marsh,4559.8,v1_unchanged,candidate_RIP_NONFOREST,6,false
+9035,North American Warm Desert Lower Montane Riparian Woodland,4387.0,v1_unchanged,candidate_RIP_WOODY,3,true
+9828,Interior Western North American Temperate Ruderal Grassland,1399.5,v1_unchanged,candidate_G,5,false
+9017,Rocky Mountain Alpine-Montane Wet Meadow,1156.0,v1_unchanged,candidate_RIP_NONFOREST,6,false
+7146,Southern Rocky Mountain Montane-Subalpine Grassland,950.7,v1_unchanged,candidate_G,5,false
+9810,North American Warm Desert Ruderal & Planted Grassland,878.7,v1_unchanged,candidate_G,5,false
+9535,North American Warm Desert Lower Montane Riparian Shrubland,532.9,v1_unchanged,candidate_RIP_UNCERTAIN,7,unknown
+9519,Rocky Mountain Lower Montane-Foothill Riparian Shrubland,332.5,v1_unchanged,candidate_RIP_UNCERTAIN,7,unknown
+9329,Western North American Ruderal Wet Shrubland,7.6,v1_unchanged,candidate_RIP_UNCERTAIN,7,unknown

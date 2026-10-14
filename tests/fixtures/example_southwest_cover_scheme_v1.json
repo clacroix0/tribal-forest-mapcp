@@ -1,0 +1,166 @@
+{
+  "schema_type": "cover_scheme_configuration",
+  "scheme_id": "example_southwest_v1",
+  "scheme_version": "v1",
+  "scheme_label": "Example Southwest Public Starter Scheme v1",
+  "source_authority": "public_starter_proposed",
+  "source_document_reference": null,
+  "geographic_applicability": "Generic example only — not approved for any specific project area",
+  "approved_by": null,
+  "approved_at_utc": null,
+  "approval_record": null,
+  "woodland_is_forest_land": true,
+  "nonstocked_policy": "Nonstocked classes are preserved for review and not automatically converted to nonforest.",
+  "one_primary_class_only": true,
+  "forest_land_policy_notes": "This is a public starter scheme. Forest-land policy has not been approved for any project. User approval required before map_candidate_forest_land runs.",
+  "classes": [
+    {
+      "candidate_code": "PP",
+      "candidate_name": "Ponderosa Pine Example",
+      "first_pass_candidate_label": "candidate_PP",
+      "candidate_forest_land": true,
+      "structure_group": "timberland",
+      "local_definition_summary": "Example timberland class — fictional codes only.",
+      "source_measurability": "not_directly_measurable",
+      "first_pass_assignment_status": "assignable",
+      "first_pass_output_code": null,
+      "review_flags_required": [
+        "species_composition_not_directly_measured",
+        "crown_cover_percentage_not_directly_measured",
+        "overstory_understory_not_modeled",
+        "professional_forestry_review_required"
+      ],
+      "protected_from_generalization_merge": false,
+      "notes": "Generic public fixture — does not represent any Tribal or program-approved class."
+    },
+    {
+      "candidate_code": "MX",
+      "candidate_name": "Mixed Conifer Example",
+      "first_pass_candidate_label": "candidate_MX",
+      "candidate_forest_land": true,
+      "structure_group": "timberland",
+      "local_definition_summary": "Example mixed conifer class — fictional codes only.",
+      "source_measurability": "not_directly_measurable",
+      "first_pass_assignment_status": "assignable",
+      "first_pass_output_code": null,
+      "review_flags_required": [
+        "species_composition_not_directly_measured",
+        "crown_cover_percentage_not_directly_measured",
+        "overstory_understory_not_modeled",
+        "professional_forestry_review_required"
+      ],
+      "protected_from_generalization_merge": false,
+      "notes": null
+    },
+    {
+      "candidate_code": "NF",
+      "candidate_name": "Nonforest Example",
+      "first_pass_candidate_label": "candidate_NF",
+      "candidate_forest_land": false,
+      "structure_group": "nonforest",
+      "local_definition_summary": "Example nonforest class — fictional codes only.",
+      "source_measurability": "approximate_via_evt",
+      "first_pass_assignment_status": "assignable",
+      "first_pass_output_code": null,
+      "review_flags_required": [
+        "professional_forestry_review_required"
+      ],
+      "protected_from_generalization_merge": false,
+      "notes": null
+    },
+    {
+      "candidate_code": "RIPA_W",
+      "candidate_name": "Riparian Woody Forest (consolidated first-pass output)",
+      "first_pass_candidate_label": "candidate_RIPA_W",
+      "candidate_forest_land": true,
+      "structure_group": "riparian_woody_forest",
+      "local_definition_summary": "Consolidated first-pass riparian woody forest output. Species subtype not resolved in first pass.",
+      "source_measurability": "approximate_via_evt",
+      "first_pass_assignment_status": "assignable",
+      "first_pass_output_code": null,
+      "review_flags_required": [
+        "riparian_subtype_not_resolved",
+        "species_review_required",
+        "professional_forestry_review_required"
+      ],
+      "protected_from_generalization_merge": true,
+      "notes": null
+    },
+    {
+      "candidate_code": "RIPA_NF",
+      "candidate_name": "Riparian Nonforest (consolidated first-pass output)",
+      "first_pass_candidate_label": "candidate_RIPA_NF",
+      "candidate_forest_land": false,
+      "structure_group": "riparian_nonforest",
+      "local_definition_summary": "Consolidated first-pass nonforested riparian output.",
+      "source_measurability": "approximate_via_evt",
+      "first_pass_assignment_status": "assignable",
+      "first_pass_output_code": null,
+      "review_flags_required": [
+        "riparian_subtype_not_resolved",
+        "professional_forestry_review_required"
+      ],
+      "protected_from_generalization_merge": true,
+      "notes": null
+    },
+    {
+      "candidate_code": "RIPA_XX",
+      "candidate_name": "Riparian Uncertain (consolidated first-pass output)",
+      "first_pass_candidate_label": "candidate_RIPA_XX",
+      "candidate_forest_land": null,
+      "structure_group": "riparian_uncertain",
+      "local_definition_summary": "Consolidated first-pass riparian uncertain output. Forest-land status unknown.",
+      "source_measurability": "approximate_via_evt",
+      "first_pass_assignment_status": "assignable",
+      "first_pass_output_code": null,
+      "review_flags_required": [
+        "riparian_subtype_not_resolved",
+        "nodata_or_unknown_coverage",
+        "professional_forestry_review_required"
+      ],
+      "protected_from_generalization_merge": true,
+      "notes": "candidate_forest_land is null — forest-land status cannot be determined. null is not the same as false."
+    },
+    {
+      "candidate_code": "RIPA_WILLOW",
+      "candidate_name": "Riparian Willow (local target — consolidated in first pass)",
+      "first_pass_candidate_label": "candidate_RIPA_W",
+      "candidate_forest_land": true,
+      "structure_group": "riparian_woody_forest",
+      "local_definition_summary": "Local target riparian willow class. Not individually assigned in first pass; routed to RIPA_W.",
+      "source_measurability": "not_directly_measurable",
+      "first_pass_assignment_status": "consolidated_to_broader_class",
+      "first_pass_output_code": "RIPA_W",
+      "review_flags_required": [
+        "riparian_subtype_not_resolved",
+        "species_review_required",
+        "professional_forestry_review_required"
+      ],
+      "protected_from_generalization_merge": true,
+      "notes": "Fictional example of a local target code consolidated to RIPA_W in first pass."
+    },
+    {
+      "candidate_code": "FUTURE_TYPE",
+      "candidate_name": "Future Type (not assignable in first pass)",
+      "first_pass_candidate_label": "candidate_FUTURE_TYPE",
+      "candidate_forest_land": null,
+      "structure_group": "timberland",
+      "local_definition_summary": "Placeholder class reserved for future approved mapping work.",
+      "source_measurability": "not_directly_measurable",
+      "first_pass_assignment_status": "not_assignable",
+      "first_pass_output_code": null,
+      "review_flags_required": [
+        "first_pass_assignment_not_supported_pending_approval"
+      ],
+      "protected_from_generalization_merge": true,
+      "notes": "Example of a not_assignable class. candidate_forest_land must be null."
+    }
+  ],
+  "limitations": [
+    "This is a public starter scheme. It is not approved for any specific Tribe, BIA program, or project area.",
+    "Species-composition and crown-cover criteria cannot be directly measured from LANDFIRE EVT, EVC, or EVH.",
+    "Candidate outputs are preliminary and require professional forestry review.",
+    "Local cover-class definitions, forest-land policy, and crosswalks must be approved before mapping."
+  ],
+  "change_control": "Changes to this scheme require a new version. Do not modify approved definitions without explicit user approval."
+}

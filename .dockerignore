@@ -1,0 +1,26 @@
+# Deny by default; include only application source and approved configuration.
+**
+!/*.py
+!/requirements-deploy.txt
+!/project_data/
+!/project_data/**
+!/docs/
+!/docs/**
+
+# Exclude credential-like files even inside included directories.
+**/.env
+**/.env.*
+**/*.pem
+**/*.key
+**/*.p12
+**/*.pfx
+**/credentials.json
+**/secrets.json
+
+# Exclude generated/cache directories inside included trees.
+**/__pycache__/
+**/.cache/
+**/.venv/
+**/.venvs/
+**/outputs/
+**/*.log

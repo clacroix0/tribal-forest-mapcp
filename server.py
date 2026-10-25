@@ -64,7 +64,8 @@ class MappingRequest(BaseModel):
     )
 
 
-@mcp.tool()
+# Legacy/developer-only: retained but not exposed through MCP.
+# @mcp.tool()
 def inspect_mapping_request(request: MappingRequest) -> dict:
     """
     Validate a preliminary Tribal Forest MapCP request before GIS processing.
@@ -1477,7 +1478,8 @@ def _read_landfire_json(url: str, params: dict) -> dict:
     raise ToolError("LANDFIRE metadata request did not complete.")
 
 
-@mcp.tool()
+# Legacy/developer-only: retained but not exposed through MCP.
+# @mcp.tool()
 def inspect_vegetation_inputs(boundary_filename: str) -> dict:
     """
     Inspect planned LANDFIRE vegetation and disturbance inputs for one
@@ -1691,7 +1693,8 @@ LANDFIRE_LFPS_TASK = (
 )
 
 
-@mcp.tool()
+# Legacy/developer-only: retained but not exposed through MCP.
+# @mcp.tool()
 def inspect_landfire_task_schema() -> dict:
     """
     Inspect the published LANDFIRE Product Service task parameter schema.
@@ -1914,7 +1917,8 @@ LANDFIRE_LFPS_V2_OUTPUT_PATH_PREFIX = (
     "landfireproductservice_gpserver/"
 )
 
-@mcp.tool()
+# Legacy/developer-only: retained but not exposed through MCP.
+# @mcp.tool()
 def prepare_landfire_sample_request(
     naip_manifest_filename: str,
 ) -> dict:
@@ -2144,7 +2148,8 @@ def prepare_landfire_sample_request(
         "review_flags": request_record["review_flags"],
     }
 
-@mcp.tool()
+# Legacy/developer-only: retained but not exposed through MCP.
+# @mcp.tool()
 def submit_landfire_sample_job(
     prepared_request_filename: str,
 ) -> dict:
@@ -6848,3 +6853,6 @@ def prepare_full_boundary_mapping_request(
     are marked FAILED_DO_NOT_USE.json where possible.
     """
     return prepare_boundary_mapping_request(OUTPUT_FOLDER, request)
+
+if __name__ == "__main__":
+    mcp.run(transport="stdio")

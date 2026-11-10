@@ -2,321 +2,239 @@
 
 Replacing the blank map—not the forester.
 
-Tribal Forest MapCP is a 2026 GSA MCP Hackathon prototype that helps
-understaffed Tribal and BIA forestry programs create preliminary candidate
-cover-type mapping from public government data.
-
-The intended result is a transparent, ArcGIS Pro-compatible review package
-for forest inventory planning and Forest Management Plan development.
-
-## Submission scope
-
-The hackathon product includes:
-- Public boundary discovery, selection, and validation.
-- Input coverage and source inspection.
-- Candidate cover-type raster.
-- Companion candidate forest-land raster.
-- Raw connected same-class patch polygons.
-- Generalized candidate cover-type review polygons.
-- Patch membership and original-class composition tables.
-- Acreage, review flags, provenance, parameters, and QC.
-- An ArcGIS-compatible export package.
-- A visual preview readable without ArcGIS.
-- A bounded conversational-agent demonstration.
-
-Generalized review polygons are part of the required product.
-They are not candidate stands or approved management units.
-
-## Current status
-
-This is an active prototype, not a completed production service.
-
-Reported local progress includes:
-- Public-boundary discovery and validation.
-- NAIP coverage inspection and bounded review sampling.
-- LFPS v2 request preparation, submission, status checking, and collection.
-- LANDFIRE raster and metadata inspection.
-- Pilot candidate cover-type and forest-land raster generation.
-- Raw cover-type polygon generation.
-
-The following remain to be verified complete:
-- Deterministic generalized review polygons.
-- Membership and class-composition outputs.
-- Final review-package export.
-- Curated public MCP tool surface.
-- Full regression and end-to-end evaluation.
-- Watsonx Orchestrate interaction.
-- Artifact retrieval from the execution environment.
-
-Status reflects reported pilot progress and must be checked against the
-current source, tests, and artifacts.
-
-The demonstrated pilot does not establish full-reservation processing,
-arbitrary-geography support, or measured classification accuracy.
-
-## Why this project exists
-
-Many forestry programs need a useful starting map before they can plan an
-inventory or develop a management plan.
-
-MapCP aims to automate public-data acquisition, preliminary classification,
-acreage calculation, and transparent documentation so professionals can begin
-with a reviewable map rather than a blank workspace.
-
-It supports professional judgment; it does not replace it.
-
-## Mapping approach
-
-The bounded pilot workflow:
-1. Identifies and reviews public boundary references.
-2. Validates the selected analysis extent.
-3. Inspects public imagery and vegetation inputs.
-4. Uses an approved, versioned pilot cover scheme and EVT crosswalk.
-5. Produces candidate cover-type and forest-land rasters.
-6. Generates raw connected same-class patches.
-7. Creates separate generalized review polygons under approved rules.
-8. Preserves original-class composition and raw-patch membership.
-9. Packages maps, summaries, QC, provenance, and limitations.
-
-NAIP provides visual-review context unless a separate method is approved.
-LANDFIRE classification remains modeled source evidence, not field inventory.
-
-## Polygon generalization
-
-The native classified raster and raw polygons are preserved.
-
-The approved bounded Mescalero trial permits eligible P/PJ patches smaller
-than 10,000 m² to become inclusions in edge-sharing P/PJ review units.
-
-Generalization:
-- Uses actual projected area.
-- Requires shared edges, not corner-only contact.
-- Preserves protected and uncertain features.
-- Retains original class acreage and patch membership.
-- Does not silently reclassify the native raster.
-- Records parameters and limitations.
-
-A generalized unit may contain both P and PJ.
-Its display label must not be confused with its original-class composition.
-
-Protected, isolated, or ineligible small patches may remain below one hectare.
-The threshold is not permission to remove every small feature.
-
-Recipient selection, tie-breaking, processing order, and unit labeling must be
-approved and documented before implementation.
-
-Generalized cover-type review polygons are not candidate stands.
-
-## Mescalero pilot safeguards
-
-Local definitions are recorded in:
-docs/mescalero-cover-type-definitions.md
-
-Pilot-specific policies include:
-- Woodland is candidate forest land.
-- Approved NT and NW classes remain candidate forest land.
-- Low current canopy alone does not override that policy.
-- Initial mapping uses candidate labels.
-- One primary candidate class is assigned per cell.
-- Unsupported local distinctions remain flagged or uncertain.
-
-Public inputs do not directly measure:
-- Species-specific crown-cover proportions.
-- Exact overstory/understory composition.
-- Basal area.
-- Merchantability.
-- Productivity.
-- Field-verified stand composition.
-
-Mescalero definitions and rules are not defaults for another geography.
-
-## Intended deliverables
-
-The review package will contain:
-- Analysis boundary/reference information.
-- Candidate cover-type and forest-land GeoTIFFs.
-- Raw and generalized polygon layers in a GeoPackage.
-- Membership and composition tables.
-- Acreage CSVs and codebook.
-- Generalization summary.
-- Source manifest and parameters.
-- QC, methods, limitations, and review flags.
-- ArcGIS Pro opening instructions.
-- A static map preview.
-
-The GIS package is intended for professional use.
-The preview and demonstration let reviewers understand the result without
-installing ArcGIS.
-
-Outputs remain preliminary and review-required.
-
-## AI-agent interaction
-
-Watsonx Orchestrate is the planned conversational host.
-
-The intended agent will guide the user through the bounded workflow, call the
-implemented MCP tools, explain actual results and limitations, and provide
-the review package.
-
-Host integration and file delivery must be demonstrated before they are
-described as complete.
-
-MCP Inspector is a development/testing interface, not proof of completed
-conversational integration.
-
-A remote artifact path alone is not a usable download.
-The transfer mechanism must be verified.
-
-## MCP tools
-
-Only tools needed by the submitted workflow should be exposed to the agent.
-
-Useful diagnostics, recovery functions, and lower-level processing code may
-remain available to developers without being advertised to end users.
-
-The current registered tool inventory must be obtained from the running
-server and kept consistent with documentation.
-
-Do not assume every historical tool is part of the submission.
-Do not assume all intended tool names already exist.
-
-Deprecated LANDFIRE routes are not used for new submissions.
-
-## Deferred features
-
-Future work:
-- Candidate stand delineation.
-- Physical-accessibility screening.
-- Interactive merge negotiation.
-- Map-click/chat integration.
-- Generic cover-scheme onboarding.
-- FIA-informed calibration.
-- AlphaEarth enhancements.
-- Change detection.
-- Inventory strata.
-- Post-fire analysis.
-
-These are not required to complete this hackathon submission.
-
-## Local development
-
-Use a project-specific Python virtual environment.
-Verify the declared dependencies and installed MCP package version.
-
-Do not copy a virtual environment between workstations and VMs.
-Do not assume cloud-hosted tools can read local laptop files.
-
-For the existing Windows development workflow, activate the project environment
-before running the installed MCP development command.
-
-Example, subject to verification in the current environment:
-
-    .\.venv\Scripts\Activate.ps1
-    mcp dev server.py:mcp
-
-If the command resolves to another Python installation, use the verified
-environment-specific invocation rather than changing unrelated code.
-
-Inspect requirements.txt and current environment compatibility before
-installation or migration.
-
-Run tests using the project environment:
-
-    python -m pytest
-
-Record results, skips, and environment details.
-A test command shown here is not a claim that it has been run.
-
-## Review in ArcGIS Pro
-
-Open the completed package and check:
-- Coordinate system and layer extent.
-- Candidate class attributes.
-- Generalized-unit membership and composition.
-- Protected features.
-- Fragmentation and unmerged-patch explanations.
-- Acreage summaries.
-- Geometry and QC results.
-- Source and rule versions.
-- Limitations and review flags.
-
-Record the software version and actual review findings.
-
-End users do not need QGIS.
-
-## Evaluation
-
-Evaluation distinguishes:
-- Computational and GIS correctness.
-- Generalization behavior.
-- Agent tool selection and error handling.
-- Reproducibility.
-- Artifact delivery.
-- Classification accuracy.
-
-Synthetic tests and simulated failures are labeled as such.
-Classification accuracy is claimed only when supported by defensible
-independent references.
-
-Visual review and acreage closure do not establish measured accuracy.
-
-## Security and privacy
-
-Use only public prototype data.
-Do not include sensitive Tribal information, nonpublic plots, or credentials.
-
-Sources and download locations are allowlisted.
-Filesystem access is restricted to approved project directories.
-
-LFPS contact email is used only for explicitly approved submission.
-Do not persist raw email in code, logs, artifacts, screenshots, tests, or Git.
-Valid email domains are not restricted to government addresses.
-
-Generated outputs and locally approved configurations are excluded from Git
-unless deliberately curated for public sharing.
-
-Do not publish a local government workstation or expose an unauthenticated
-endpoint to simplify integration.
-
-## Limitations
-
-MapCP does not establish:
-- Ownership or trust status.
-- Jurisdiction.
-- Legal access.
-- Commercial status or productivity.
-- Tribal approval.
-- Management authority.
-- Field-verified cover types.
-- Final stand boundaries.
-
-Disturbance or barrier screening is not claimed where the relevant data and
-method were not implemented.
-
-Public modeled data may contain errors, scale limitations, and source-date
-differences. Professional review remains necessary.
-
-## Project documentation
-
-- AGENTS.md: coding-assistant behavior and approval controls.
-- docs/project-specification.md: scope, methods, outputs, and acceptance criteria.
-- docs/mescalero-cover-type-definitions.md: local pilot reference definitions.
-- Cover-type onboarding plan: future/general onboarding design; not proof of
-  current implementation.
-
-The current specification defines the bounded hackathon scope.
-Older plans must not silently expand it.
-
-## Completion
-
-The local toolset is ready for host integration only when candidate mapping,
-raw and generalized polygons, composition/membership, export, tests, and
-ArcGIS review meet the specification.
-
-The submission is ready only after agent interaction, artifact delivery,
-evaluation, presentation, and the reviewed repository version are complete.
-
-## License
-
-License selection must be confirmed before public release.
-Do not assume third-party code, dependencies, or data have identical licenses.
+Tribal Forest MapCP is a 2026 GSA MCP Hackathon prototype helping understaffed
+Tribal and BIA forestry programs prepare preliminary candidate forest-land and
+cover-type mapping from public government data for inventory planning and Forest
+Management Plan development.
+
+Candidate cover-type mapping is the central purpose. Forest/nonforest screening
+is a required companion, not a substitute. Outputs require professional review;
+they are not field inventory, final stands, or approved management classes.
+
+## Status — November 10, 2026
+
+This is an active prototype, not a production service. Status below separates
+source-code presence, previously reported progress, and observed integration tests.
+
+| Component | Evidence and current limitation |
+|---|---|
+| Repository checkpoint | The VM working copy was clean at commit `0a8983e`. After `git fetch origin`, local `main` and `origin/main` had zero unique commits on either side. This describes the pre-documentation-update checkpoint, not a permanent latest revision. |
+| Pilot acquisition and mapping | Previously reported local progress includes public-boundary discovery/validation, NAIP review sampling, LFPS v2 collection, raster inspection, candidate cover-type/forest-land rasters, and raw patches. These results were not rerun during the November 10 documentation session. |
+| Generalization and composition | Source and associated tests are tracked. Current test execution, output QC, and ArcGIS review must be checked before reporting completion. |
+| Boundary expansion | Acquisition, service-contract, mapping, and preflight modules and tests are tracked. File presence does not establish a demonstrated full-reservation workflow. |
+| HTTP/container integration | `server_http.py`, `Dockerfile`, and deployment requirements are tracked. Commit history records an authenticated launcher and container GIS-import checks. Live deployment behavior was not revalidated in this checkpoint. |
+| Orchestrate agent | An existing hosted MapCP agent with tools and knowledge attached was accessed through ADK 2.19.1. Agent configuration was exported. |
+| Runtime skill | `candidate-cover-mapping-review` was registered, attached, updated, selected automatically in a tested draft request, and its revised instructions appeared in the subsequent model input. |
+| Agent reliability | The tested model response still invented a manifest filename, expanded the initial checklist unnecessarily, and requested mapping approval prematurely. Prompt tuning was paused; these limitations remain open. |
+| Export and file delivery | Final package completeness, durable storage, download access, and workstation transfer require separate evidence. A server-side path is not delivery. |
+| Regression/accuracy | No fresh regression-suite result or defensible independent classification-accuracy estimate is claimed by this checkpoint. |
+
+The observed skill behavior is a bounded draft-preview test, not proof of end-to-end
+mapping reliability or of the deployed agent using the same revision.
+
+## Architecture
+
+```text
+Forester in watsonx Orchestrate
+          |
+          | MCP tool calls using attached tool schemas
+          v
+MapCP Python server / approved HTTP deployment
+          |
+          +-- public boundary and source acquisition
+          +-- input validation and approved classification configuration
+          +-- candidate rasters, raw patches, generalized review units
+          +-- QC, acreage/composition, provenance, review artifacts
+          |
+          v
+Verified file delivery -> professional ArcGIS Pro review
+```
+
+Orchestrate is the conversational host, not the GIS processing engine. The runtime
+skill supplies procedures; it does not implement missing tools, persistent storage,
+server authorization, or file transfer. Coding assistants are not required for
+end-user operation.
+
+## Bounded mapping workflow
+
+1. Establish geography, extent, objective, and approved forestry definitions.
+2. Discover, select, and validate the public reference boundary.
+3. Inspect source coverage, dates/version, CRS, resolution, alignment, and NoData.
+4. Confirm the approved cover scheme, crosswalk version, and processing settings.
+5. Produce candidate cover-type and companion candidate forest-land rasters.
+6. Create raw connected same-class patches from the candidate raster.
+7. Create separate generalized review polygons under approved pilot rules.
+8. Preserve raw-patch membership and original-class composition and acreage.
+9. Review actual QC, provenance, uncertainty, parameters, and limitations.
+10. Create the supported review package and separately verify delivery and ArcGIS use.
+
+Use existing artifacts when available and suitable. Carry exact returned identifiers
+between tools; collection manifests, methods JSON files, and raw-run directories
+are not interchangeable. Do not repeat collection or remote submission simply
+because an earlier artifact reference is missing.
+
+Only tools attached to the current host are callable. Obtain the actual registered
+inventory and schemas rather than treating this workflow or module names as proof
+that every stage is exposed. Respect sample limits; sample success does not prove
+full-boundary processing support.
+
+## Forestry method and pilot limitations
+
+The pilot uses government-source evidence and approved, versioned configuration.
+NAIP supplies visual-review context unless a separate analytical method is approved.
+LANDFIRE classes are modeled vegetation evidence, not direct measurements of
+species-specific crown cover, basal area, merchantability, or productivity.
+
+Mescalero policies and class definitions are recorded in
+`docs/mescalero-cover-type-definitions.md`. Approved woodland and NT/NW treatment
+must not be overridden solely because current canopy is low. Do not transfer these
+local rules to another geography without approval.
+
+The inspected pilot classification used EVT crosswalking; EVC/EVH classification
+and disturbance-history analysis must not be claimed without implementation and
+execution evidence. Preserve NoData, unknown, mixed, disturbed, transitional, and
+conflicting evidence according to approved rules.
+
+Public FIA can support regional ecological plausibility and calibration. Altered
+public plot coordinates are not exact pixel-level or stand-level reference labels.
+Source agreement and acreage closure are not independent accuracy estimates.
+
+## Generalized review polygons are not stands
+
+Preserve the native candidate raster and raw patches separately. The documented
+bounded Mescalero P/PJ trial uses a 10,000-square-meter threshold and shared-edge
+eligibility, with protected/excluded features and deterministic rules requiring
+review against the current implementation and approved configuration.
+
+A generalized unit may contain more than one original class. Its display label
+must not be used as though all unit acreage belongs to the label's class. Use
+membership and composition tables for original-class totals. Protected, isolated,
+or ineligible small patches may remain below the threshold.
+
+Do not imply smoothing, barrier protection, disturbance analysis, or final stand
+delineation when the relevant method was not implemented and evaluated.
+
+## Repository organization
+
+Tracked components include:
+
+- `server.py`: MCP server/tool integration.
+- `server_http.py`, `Dockerfile`, `requirements-deploy.txt`: HTTP/container support.
+- `boundary_acquisition.py`, `boundary_mapping.py`,
+  `boundary_mapping_preflight.py`, `boundary_service_contract.py`: boundary-related
+  implementation; verify each current contract before use.
+- `cover_scheme_models.py`, `cover_type_patches.py`,
+  `cover_type_generalization.py`: configuration and polygon-processing components.
+- `check_mcp_discovery.py`, `check_mcp_stdio.py`, `check_mcp_tool_calls.py`:
+  development diagnostics; inspect side effects before invocation.
+- `tests/`: automated tests; presence is not a passing test result.
+- `docs/`: specifications, pilot definitions, installation notes, plans, and backlog.
+- `project_data/`: configuration/reference materials; see the tracking caveat below.
+
+Agent YAML and runtime skills should be version-controlled as reviewed configuration,
+separately from authentication files. Preserve deployment-specific bindings needed
+for restoration in approved storage; do not publish secrets to improve portability.
+
+## Configuration tracking and reproducibility
+
+The current `.gitignore` excludes new `project_data/` content by default, but the
+November 10 Git inventory shows these files already tracked:
+
+- `project_data/cover_schemes/mescalero_v1_cover_scheme_v1.json`
+- `project_data/crosswalks/mescalero_v1_evt_crosswalk_v1.json`
+- `project_data/crosswalks/mescalero_v1_evt_crosswalk_v2.json`
+- `project_data/crosswalks/crosswalk_v2_review.csv`
+- `project_data/reference_data/landfire/LF2025_EVT.csv`
+
+Ignore rules do not stop tracking existing files. Inclusion in Git is not proof of
+forestry approval, public-release clearance, or selection for the active run. Record
+the actual version used; do not silently promote v2 because its filename is newer.
+Review tracked content and licenses before publication. New local configurations and
+important generated artifacts need a separate approved backup or deliberate curation.
+
+## Development and testing
+
+Use the actual project environment and inspect `requirements.txt` and
+`requirements-deploy.txt` before installation. GIS libraries may require OS runtime
+dependencies. Do not copy virtual environments between machines or change system
+Python to resolve a project-level problem.
+
+From the repository root, using the verified project interpreter:
+
+```bash
+python -m pytest
+```
+
+This is an example command, not evidence it was run. Record interpreter/package
+versions, command, test totals, failures/skips, and relevant GIS checks. Keep
+synthetic fixtures and simulated failures clearly labeled.
+
+Inspect the current launchers and deployment documentation for startup commands;
+do not assume an old `mcp dev` example matches the installed MCP package. Cloud
+Shell, the VM, the container, and the workstation have separate filesystems.
+
+For Orchestrate, record the tested ADK version and active environment. Export the
+current agent, import/update the skill, verify the agent binding, and test draft
+behavior before any separately approved deployment. Never put API keys into the
+agent YAML, skill, terminal command arguments, or repository.
+
+## Review package and evaluation
+
+The required outcome is a preliminary ArcGIS Pro-compatible package with completed
+layers, acreage/composition CSVs, source/configuration versions, methods, QC,
+limitations, review flags, and opening instructions. A static preview is a submission
+target; its existence and fidelity must be demonstrated before claiming delivery.
+
+Verify these separately:
+
+- Processing and artifact integrity.
+- Package contents and completeness.
+- Durable storage and authorized download access.
+- Transfer to the workstation.
+- ArcGIS Pro opening, geometry/attributes, acreage, fragmentation, and professional review.
+
+End users must not need QGIS. Record ArcGIS/software versions and actual findings.
+Evaluate computational correctness, error handling, tool selection, reproducibility,
+GIS quality, and delivery separately from independent classification accuracy.
+
+## Security and safeguards
+
+Use only approved public prototype data. Exclude sensitive Tribal information,
+culturally sensitive locations, nonpublic plots, credentials, and transient contact
+email from Git, logs, screenshots, and artifacts. Use contact email only for the
+explicitly approved LFPS request; do not restrict valid email domains arbitrarily.
+
+Use allowlisted HTTPS sources, bounded requests/retries, validated identifiers,
+controlled output directories, and server-side authorization. Written approvals and
+skills do not replace actual permission enforcement. Do not expose arbitrary
+shell/code/SQL/filesystem operations through MCP.
+
+Do not upload `.env`, Cloud Shell/Orchestrate credential configuration, virtual
+environments, raw unreviewed traces, or signed download URLs. A private repository
+is not permission to store credentials or restricted data.
+
+Outputs establish no authoritative ownership, trust status, jurisdiction, legal
+access, commercial status, productivity, Tribal approval, or management authority.
+
+## Remaining work and scope
+
+First complete the bounded, evaluated cover-type workflow, export/delivery,
+professional review, reproducible configuration, repository, demo, and presentation.
+Resolve documented agent-reliability issues without representing prompt changes as
+validated improvements.
+
+Next core milestones are objective-dependent candidate stands and physical-
+accessibility screening; accessibility is not a legal-access determination.
+Optional enhancements include FIA-informed workflows, AlphaEarth features, change
+detection, inventory strata, and post-fire analysis. Preserve government-only
+operation and do not drop cover types to add optional features.
+
+## Documentation and license
+
+Read `AGENTS.md`, `docs/project-specification.md`, pilot definitions, and relevant
+installation notes. Treat old plans as plans, not evidence of implementation; flag
+scope conflicts for review rather than silently changing forestry requirements.
+
+License selection and third-party code/data licensing must be confirmed before
+public release. Do not assume all dependencies and government-hosted datasets have
+identical redistribution terms.

@@ -6854,5 +6854,58 @@ def prepare_full_boundary_mapping_request(
     """
     return prepare_boundary_mapping_request(OUTPUT_FOLDER, request)
 
+from review_package_storage import deliver_review_package as _deliver_review_package
+
+
+class ReviewPackageExportRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    action: Literal["create", "renew"] = Field(
+        description="create packages and uploads an existing raster mapping; renew only refreshes a stored package link."
+    )
+    methods_filename: str | None = Field(
+        default=None, max_length=160,
+        description="Create only: generated cmap_<8 hex>_vN_methods.json filename directly inside outputs; never a path."
+    )
+    package_id: str | None = Field(
+        default=None, max_length=36,
+        description="Renew only: canonical package UUID returned by a successful export."
+    )
+
+
+@mcp.tool()
+def export_arcgis_review_package(request: ReviewPackageExportRequest) -> dict:
+    """Create a preliminary raster review ZIP and return a temporary download link.
+
+    Requires explicit human approval in the host for these exact inputs before
+    invocation. A model-generated approval string is not accepted or requested.
+    Administrator-configured private storage and runtime HMAC secrets are required;
+    the feature is disabled by default until setup and host approval tests pass.
+
+    create: validate existing completed mapping artifacts, raster grid/provenance,
+    actual class counts, forest-land pixels, codebook and acreage consistency;
+    create a new immutable local package, upload to a configured private COS prefix,
+    verify uploaded bytes by read-back SHA-256, and return a one-hour download link.
+    renew: read an existing stored package record and issue a new one-hour link.
+    No remapping or local source files are required for renewal.
+
+    Side effects: create writes local package files and private storage objects;
+    both actions issue a temporary bearer download URL. Do not log or persist URLs.
+    Storage destination, object keys and arbitrary filesystem paths are not inputs.
+    No automatic overwrite, processing retry, deletion, ACL or credential changes.
+
+    Initial scope: north-up EPSG:5070, 30 m preliminary single-band integer rasters,
+    at most four million pixels and 100 MiB of source artifacts. Package contains
+    two GeoTIFFs, three CSVs, original methods JSON, opening guide, QC/limitations,
+    and checksum manifest. No polygons or GeoPackage are generated or implied.
+    Automated checks are not professional review, land-status verification or
+    independent classification accuracy. Actual workstation delivery is unverified.
+
+    Failure: return disabled or a structured failed-stage result; never invent a
+    download URL. A failed upload may leave partial objects for administrator review.
+    """
+    return _deliver_review_package(OUTPUT_FOLDER, request.model_dump())
+
+
 if __name__ == "__main__":
     mcp.run(transport="stdio")

@@ -1,8 +1,3 @@
-Yes, but your working-relationship section is already correct—there is no need to rewrite it around Bob. The important updates are to align this file with the revised specification: full approved-boundary delivery is the target, generalization is optional, sample downloads are not final acceptance, and export enablement is not per-call approval.
-
-Here is the complete replacement:
-
-```markdown
 # Tribal Forest MapCP — Coding Assistant Instructions
 
 Last scope revision: 2026-11-13
@@ -532,4 +527,3 @@ the case. Do not imply that editing status documentation verifies implementation
 
 Propose a commit after applicable review and tests.
 Do not commit or push without approval.
-```

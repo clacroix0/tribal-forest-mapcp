@@ -1,4 +1,3 @@
-```markdown
 # MapCP raster review package and private chat delivery
 
 Status updated November 13, 2026: the deployed exporter is enabled, and the user
@@ -472,4 +471,3 @@ legal-access determination, or final management classes.
 
 No additional bucket selection, credentials, live writes, policy changes,
 deployment, commit, or push are authorized by this documentation update.
-```

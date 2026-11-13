@@ -1,4 +1,3 @@
-```markdown
 # Tribal Forest MapCP — Project Specification
 
 Scope revision: 2026-11-13
@@ -744,4 +743,3 @@ all limits is an acceptable implementation.
 Update status only with identifiable source, test, artifact, deployment, and
 review evidence. Never infer completion from filenames, module presence,
 instructions, plans, or model-generated claims.
-```

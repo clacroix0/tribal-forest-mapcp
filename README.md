@@ -35,10 +35,10 @@ automatically revalidated by the November 13 update.
 | Orchestrate agent | An existing hosted MapCP agent with tools and knowledge attached was accessed through ADK 2.19.1 during the November 10 checkpoint. Agent configuration was exported. Verify the current hosted version against the reviewed repository configuration. |
 | Runtime skill | During the November 10 checkpoint, `candidate-cover-mapping-review` was registered, attached, updated, selected automatically in a tested draft request, and its revised instructions appeared in the subsequent model input. Verify the current binding before relying on that historical result. |
 | Agent reliability | The November 10 tested model response invented a manifest filename, expanded the initial checklist unnecessarily, and requested mapping approval prematurely. Later instructions were revised, but resolution of these reliability issues requires new tests. |
-| Export and file delivery | On November 13, the user confirmed successful download of a sample-area review ZIP containing candidate cover-type and forest-land rasters, acreage tables, codebooks, methods JSON, and an ArcGIS Pro guide. The current exporter is raster-only. |
+| Export and file delivery | On November 13, the user confirmed successful download of a sample-area review ZIP containing candidate cover-type and forest-land rasters, acreage tables, codebooks, methods JSON, and an ArcGIS Pro guide. That package was raster-only. On November 16, a polygon-inclusive sample package (schema 2, with a raw-patch GeoPackage) was also downloaded and opened in ArcGIS Pro 3.7.3 (operator-reported). It is a sample, not full-boundary coverage, and deployed build provenance is unverified. |
 | Export configuration | Eric confirmed that `MAPCP_REVIEW_EXPORT_ENABLED=true` was set in the deployed Code Engine application configuration. This enables the existing exporter; it does not add mapping or polygon-packaging capabilities. |
 | Geographic completeness | The downloaded package covers a sample area, not the approved full project boundary. Full-boundary mapping and delivery have not been demonstrated. |
-| Polygon delivery | The agent reported a raw-patch GeoPackage, but its current availability and inclusion in a downloadable package have not been independently verified. A reported server-side path is not delivery. |
+| Polygon delivery | A raw-patch GeoPackage was included in the November 16 sample package and opened in ArcGIS Pro 3.7.3 (operator-reported). Delivery is shown for a sample area only; a server-side path alone is not delivery. |
 | ArcGIS acceptance | Successful ZIP download is not evidence that all packaged layers have been opened, checked, and accepted for professional review in ArcGIS Pro. Record that review separately. |
 | Regression/accuracy | No fresh regression-suite result or defensible independent classification-accuracy estimate is claimed by this checkpoint. |
 
@@ -173,8 +173,9 @@ Tracked components include:
 - `server.py`: MCP server/tool integration.
 - `server_http.py`, `Dockerfile`, `requirements-deploy.txt`: HTTP/container support.
 - `review_package.py`, `review_package_storage.py`: review-package construction
-  and storage/delivery support. The current exporter produces a raster-only
-  package; verify current contracts and tests before extending it.
+  and storage/delivery support. The exporter can include a raw polygon run
+  (omitting it produces a raster-only package); verify current contracts and
+  tests before extending it.
 - `boundary_acquisition.py`, `boundary_mapping.py`,
   `boundary_mapping_preflight.py`, `boundary_service_contract.py`: boundary-related
   implementation; verify each current contract before use.
@@ -309,8 +310,19 @@ The November 13 downloaded sample ZIP contains:
 - Methods JSON.
 - An ArcGIS Pro opening guide.
 
-The current exporter does not include candidate cover-type polygons or a polygon
-GeoPackage. The package is sample-area output, not a full-boundary deliverable.
+That November 13 package did not include candidate cover-type polygons or a
+polygon GeoPackage. It is sample-area output, not a full-boundary deliverable.
+
+The November 16 downloaded sample ZIP (schema 2, scope
+`preliminary_raster_and_raw_polygon_review`) additionally contains:
+
+- `raw_cover_type_patches.gpkg` (layer `candidate_cover_type_raw_patches`).
+- `raw_patch_acreage.csv`.
+- `raw_patch_qc.json`.
+
+It is also sample-area output, not a full-boundary deliverable. The operator
+opened the GeoPackage and rasters in ArcGIS Pro 3.7.3 without errors; this was
+an informal visual check, not an accuracy assessment.
 
 A static preview remains a submission target; its existence and fidelity must be
 demonstrated before claiming delivery.

@@ -6902,8 +6902,9 @@ def export_arcgis_review_package(request: ReviewPackageExportRequest) -> dict:
     Storage destination, object keys and arbitrary filesystem paths are not inputs.
     No automatic overwrite, processing retry, deletion, ACL or credential changes.
 
-    Initial scope: north-up EPSG:5070, 30 m preliminary single-band integer rasters,
-    at most four million pixels and 100 MiB of source artifacts. Package contains
+    Supported scope: north-up EPSG:5070, 30 m preliminary single-band integer rasters,
+    at most four million pixels, 192 MiB of combined mapping and optional raw-polygon
+    source artifacts, and a separate 100 MiB completed ZIP ceiling. Package contains
     two GeoTIFFs, three CSVs, original methods JSON, opening guide, QC/limitations,
     and checksum manifest. When raw_run_directory is supplied, validate and include
     the existing matching raw GeoPackage, polygon acreage CSV, and QC/provenance JSON.
@@ -6912,7 +6913,8 @@ def export_arcgis_review_package(request: ReviewPackageExportRequest) -> dict:
     full-boundary coverage. No NAIP imagery is added. Existing raster-only packages
     remain renewable. Omitting raw_run_directory creates a raster-only intermediate.
     Automated checks are not professional review, land-status verification or
-    independent classification accuracy. Actual workstation delivery is unverified.
+    independent classification accuracy. Export does not certify workstation
+    transfer or ArcGIS Pro acceptance.
 
     Failure: return disabled or a structured failed-stage result; never invent a
     download URL. A failed upload may leave partial objects for administrator review.

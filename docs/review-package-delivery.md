@@ -1,5 +1,212 @@
 # MapCP raster review package and private chat delivery
 
+## Boundary-export compatibility checkpoint - November 16, 2026
+
+### Source and status
+
+Local VM working branch: `fix/full-boundary-export-compat`.
+
+Base commit: `7cfb5bbc8b37ea8d61694a280de3aec3bc30199d`.
+
+The compatibility edits and tests are uncommitted at this checkpoint.
+The base commit does not contain these working-tree changes. No deployment
+of this compatibility repair has been demonstrated.
+
+This section supersedes older descriptions below only for the reviewed local
+working-tree behavior and its dated tests. Historical deployment and sample
+delivery observations remain historical evidence, not acceptance of this repair.
+
+### Compatibility behavior
+
+The exporter recognizes the boundary mapper's existing output representation
+without rewriting original mapping artifacts:
+
+- Accept `codebook_csv` as the codebook artifact-key alias only when
+  `boundary_clipping_performed` is explicitly true. Conflicting canonical and
+  alias references are rejected; controlled filename checks remain in force.
+- Require nonnegative JSON integer boundary component counts. Outside-boundary
+  cells plus inside-boundary EVT NoData cells must equal total NoData, and valid
+  plus NoData cells must equal the recorded raster total.
+- Permit boundary methods with the three successful Boolean closure checks and
+  no legacy numeric closure totals. Any numeric closure totals supplied must
+  still agree. Legacy runs retain the numeric-total requirements.
+- Validate the two exact cover-type CSV component labels
+  `outside_boundary_masked` and `evt_nodata_inside_boundary`. Both rows,
+  including zero-count components, are required when the split representation
+  is used. Validate code -9999, null forest-land status, integer counts, and
+  area. Combine the two rows only in memory for aggregate raster-count QC.
+  Legacy aggregate-NoData rows remain supported.
+- Permit valid-only boundary forest-land summaries with codes 0, 1, and 2,
+  including zero-count classes. Check CSV and methods summaries independently
+  against raster counts. Reconcile NoData separately against methods and both
+  rasters. Existing summaries that explicitly include NoData remain supported.
+- Preserve unknown forest-land code 2 separately from NoData -9999 and
+  nonforest code 0.
+
+Generated `QC_AND_LIMITATIONS.json` records split cover-type NoData handling
+and boundary forest-land summary validation where applicable. Original methods
+and CSV bytes are preserved. Export does not independently authenticate approval
+history or verify the geographic location of each reported NoData component.
+
+No public tool schema, classification rule, crosswalk, forestry threshold,
+connectivity rule, polygon tolerance, storage configuration, or deployment
+setting is changed by this repair.
+
+### Separate source and ZIP ceilings
+
+- `MAX_SOURCE_BYTES`: 192 MiB, shared by the six mapping source artifacts and,
+  when requested, the three raw-polygon source artifacts.
+- `MAX_BYTES`: 100 MiB, unchanged ZIP ceiling.
+- The source budget does not count generated package documents or the ZIP.
+  The ZIP ceiling applies to the completed archive including generated members.
+- Existing four-million-cell, 200,000-patch, metadata-size, temporary-space,
+  and local-cache checks remain in place.
+
+Sources may exceed 100 MiB only if they remain within 192 MiB and the resulting
+ZIP remains within 100 MiB. The source increase is not permission to remove
+other processing limits or proof of near-limit resource feasibility.
+The ZIP is checked after compression; this is not an incremental ZIP-write cap.
+
+### Operator-reported VM verification
+
+Python executable used:
+
+    /home/itzuser/.venvs/mapcp-py312/bin/python
+
+Actual commands and reported results on November 16, 2026:
+
+1. Actual synthetic producer integration:
+
+       python -B -m pytest tests/test_boundary_export_integration.py -q -rs -p no:cacheprovider
+
+   Result: 4 passed in 1.29 seconds; no reported failures or skips.
+
+2. Size-policy subset in `tests/test_review_package_polygons.py`:
+
+   Result: 7 passed, 103 deselected in 0.18 seconds; no reported failures or skips.
+
+3. Combined related regression run:
+
+       python -B -m pytest tests/test_boundary_export_integration.py tests/test_review_package_polygons.py tests/test_cover_type_patches.py -q -rs -p no:cacheprovider
+
+   Result: 150 passed in 3.01 seconds; no reported failures or skips.
+
+The producer integration uses actual local preview, boundary mapping, raw-polygon
+generation, and export functions with tiny synthetic rasters, a synthetic
+boundary, and a synthetic crosswalk. It covers no NoData, outside-only,
+interior-only, and mixed NoData cases. Synthetic approval markers are test
+fixtures, not real forestry approvals.
+
+The size tests assert the production constants and exercise small, temporarily
+scaled budgets with real file copying and compression. They check exact source
+budget acceptance, one-byte source overflow, combined raster/polygon accounting,
+compressible sources larger than the ZIP budget, oversized-ZIP rejection, and
+failed-build staging cleanup. GIS validation is simulated in those size tests.
+
+These results do not establish literal 192 MiB/100 MiB execution, exact-byte
+ZIP-boundary acceptance, near-limit resource performance, or live storage
+enforcement. Storage tests in the focused suite use simulated COS.
+
+### Remaining acceptance work
+
+- Review broader regression coverage beyond the three files reported above.
+- Review and commit the complete change only after explicit approval; include
+  the new producer integration test, which was untracked at this checkpoint.
+- Separately approve a local package build from exact existing real mapping and
+  raw-polygon run identifiers after confirming artifacts and resource readiness.
+  Do not remap merely to repair export.
+- Verify the real package's run identity, required members, extent, coverage,
+  acreage, checksums, and completeness across the approved analysis boundary.
+- Separately authorize any transfer/storage/deployment action and verify actual
+  workstation delivery and ArcGIS Pro usability.
+- Preserve the unresolved deployment-provenance, host-approval, concurrency,
+  storage-policy, expiry/renewal, and recovery limitations recorded below.
+
+No real forestry-artifact package build, live COS action, configuration change,
+deployment, commit, or push is established by these tests.
+This documentation edit is not new implementation verification.
+
+### Accepted hackathon artifact and real delivery - November 16, 2026
+
+The user accepted the delivered mapping and raw-polygon review package as-is
+for the hackathon entry. No further classification, remapping, or generalization
+is requested for this accepted artifact.
+
+This is user acceptance for the hackathon demonstration. It does not establish
+Tribal approval, independent classification accuracy, or separately verified
+coverage of the approved full analysis boundary. It does not close other
+submission or specification gates automatically.
+
+#### Broader local regression evidence
+
+Operator-reported VM command:
+
+    MAPCP_REVIEW_EXPORT_ENABLED=false /home/itzuser/.venvs/mapcp-py312/bin/python -B -m pytest tests/test_boundary_mapping.py tests/test_boundary_mapping_preflight.py tests/test_boundary_export_integration.py tests/test_review_package_polygons.py tests/test_cover_type_patches.py -q -rs -p no:cacheprovider
+
+Result: 271 passed in 3.87 seconds; no reported failures or skips.
+This is a five-file regression run, not a full-repository test run.
+The environment override applied to that test process, not Code Engine.
+
+#### Accepted real-artifact package
+
+- Mapping job: `f4111579-24a1-4923-bcb8-240d5e9f50f5`.
+- Methods: `cmap_f4111579_v2_methods.json`.
+- Crosswalk: `mescalero_v1_evt_crosswalk_v2`, version `v2`.
+- Raw run: `rawpatch_f4111579_v2_20261116T194636_f80c64`.
+- Package ID: `51b15397-90a8-4c9e-937d-ed6dee7d411c`.
+- Scope: `preliminary_raster_and_raw_polygon_review`, schema `2`.
+- Source artifacts: 133,201,516 bytes.
+- ZIP: 12,281,096 bytes; 12 package members.
+- ZIP SHA-256:
+  `454c661d5cb667ea5e7d419092bed768637493705310ff7600f8a49ec4302d2d`.
+- Local build runtime: 141.02 seconds.
+- Reported process peak RSS: 1,183,020 KiB.
+- Original source-file checksum preservation check: passed.
+- Classification rerun: false.
+- Storage upload by the local builder: false.
+
+The local build used actual raster and polygon validation. These measurements
+describe this run on the VM, not Code Engine capacity or near-limit performance.
+
+#### Workstation transfer and review
+
+The operator transferred the ZIP through a personal iCloud account accessed
+from the VM, then downloaded and extracted it on Windows. This is a reported
+manual workaround, not an approved production transfer mechanism and not
+evidence of Orchestrate/COS delivery for this package.
+
+Windows verification of `mapcp_raster_review (3).zip` reported the exact size
+and SHA-256 above, with `MatchesExpected: True`.
+
+Screenshot evidence shows the extracted files on Windows and raw candidate
+cover-type polygons loaded and rendered in ArcGIS Pro. The user accepted the
+artifact as-is for the hackathon. No additional workstation feature-count,
+raster-comparison, acreage, or boundary-coverage checks are inferred.
+
+#### Retained limitations and next host test
+
+EVT codes 7012, 7057, and 7061 remain assigned to `unmapped_evt`.
+No crosswalk change was made to remove these warnings.
+
+The ZIP does not include the boundary file or a static preview. Do not describe
+it as satisfying every final-package requirement. Independent accuracy,
+approval-history authentication, separately verified approved-boundary
+completeness, and the previously documented security limitations remain open.
+
+At this checkpoint, the compatibility repair is local and uncommitted.
+It has not been demonstrated in the backend called by Orchestrate.
+Do not imply that the accepted VM artifacts are present in a deployed container.
+
+Before host testing, identify and approve the exact reviewed commit/build,
+preserve required runtime configuration and artifacts, verify backend revision
+and tool binding, and obtain approval for each consequential export/storage
+operation. Do not remap merely to recover or demonstrate this accepted package.
+
+This record authorizes no commit, push, deployment, cloud upload, or submission.
+
+---
+
+
 Status updated November 13, 2026: the deployed exporter is enabled, and the user
 confirmed successful download of a sample-area raster review ZIP.
 
@@ -76,11 +283,14 @@ acreage, saved QC totals, and acreage CSV. No new forestry rule or tolerance
 is introduced. Generalized polygons, extra layers, or changed attributes are
 not accepted as raw patches by this contract.
 
-The existing limits remain: four million raster cells, 200,000 raw patches,
-100 MiB combined source artifacts, and 100 MiB ZIP. Polygon validation uses
-in-memory GIS operations and may be expensive near those limits; test resource
-use before larger execution. Existing limits are ceilings, not proof that all
-inputs near them are feasible.
+The original polygon-export checkpoint used limits of four million raster
+cells, 200,000 raw patches, 100 MiB combined source artifacts, and 100 MiB ZIP.
+The November 16 boundary-export compatibility working branch separates the
+source ceiling (192 MiB) from the unchanged ZIP ceiling (100 MiB); see the
+current checkpoint above. This is not evidence of deployed limits.
+Polygon validation uses in-memory GIS operations and may be expensive near
+these limits; verify resources before larger execution. Ceilings do not prove
+that inputs near them are feasible.
 
 ### Focused verification
 

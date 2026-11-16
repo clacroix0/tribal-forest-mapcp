@@ -14,7 +14,8 @@ from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 
-MAX_BYTES = 100 * 1024 * 1024
+MAX_BYTES = 100 * 1024 * 1024  # ZIP and storage ceiling; unchanged.
+MAX_SOURCE_BYTES = 192 * 1024 * 1024  # Combined uncompressed source artifacts.
 MAX_METHODS_BYTES = 5 * 1024 * 1024
 MAX_PIXELS = 4_000_000
 ACRE_M2 = 4046.8564224
@@ -134,6 +135,53 @@ def _codebook(path):
             "invalid_codebook", "Codebook must explicitly distinguish NoData.")
     return result
 
+
+def _artifact_reference(refs, key, methods):
+    """Resolve the boundary mapper's codebook alias without changing sources."""
+    if key != "cover_type_codebook_csv":
+        return refs.get(key)
+    sentinels = methods.get("sentinels")
+    boundary = (
+        isinstance(sentinels, dict)
+        and sentinels.get("boundary_clipping_performed") is True
+    )
+    if not boundary:
+        return refs.get(key)
+    if key in refs and "codebook_csv" in refs:
+        require(
+            refs[key] == refs["codebook_csv"],
+            "identity_mismatch",
+            "Conflicting codebook artifact references."
+        )
+    return refs[key] if key in refs else refs.get("codebook_csv")
+
+
+
+def _boundary_nodata_counts(methods):
+    """Validate recorded boundary NoData accounting, not geographic coverage."""
+    sentinels = methods.get("sentinels")
+    if not (
+        isinstance(sentinels, dict)
+        and sentinels.get("boundary_clipping_performed") is True
+    ):
+        return None
+    outside = _integer(methods.get("outside_boundary_cells"))
+    inside = _integer(methods.get("evt_nodata_inside_boundary_cells"))
+    nodata = _integer(methods.get("nodata_cell_count"))
+    valid = _integer(methods.get("valid_cell_count"))
+    total = _integer(methods.get("total_pixels"))
+    require(
+        outside + inside == nodata and valid + nodata == total,
+        "closure_failed",
+        "Boundary NoData components disagree with recorded totals."
+    )
+    return {
+        "outside_boundary_cells": outside,
+        "evt_nodata_inside_boundary_cells": inside,
+        "nodata_cell_count": nodata,
+    }
+
+
 def _validate_methods(m, prefix):
     require(m.get("document_type") == "candidate_cover_type_methods_and_provenance",
             "invalid_metadata", "Unsupported methods document type.")
@@ -164,10 +212,15 @@ def _validate_methods(m, prefix):
     valid, nodata = _integer(m.get("valid_cell_count")), _integer(m.get("nodata_cell_count"))
     require(valid > 0, "empty_mapping", "A map with no valid cells cannot be exported.")
     require(valid + nodata == total, "closure_failed", "Valid and NoData counts do not close.")
+    boundary_nodata = _boundary_nodata_counts(m)
     closure = m.get("acreage_closure", {})
+    require(isinstance(closure, dict), "invalid_metadata",
+            "Mapping closure must be a JSON object.")
     require(all(closure.get(k) is True for k in ("cover_type_valid_sum_matches", "forest_land_valid_sum_matches", "total_pixel_sum_matches")),
             "closure_failed", "Required mapping closure checks did not pass.")
     for k, expected in (("valid_cell_count", valid), ("cover_type_class_sum", valid), ("forest_land_class_sum", valid), ("nodata_count", nodata), ("total_pixels", total)):
+        if boundary_nodata is not None and k not in closure:
+            continue
         require(type(closure.get(k)) is int and closure[k] == expected, "closure_failed", "Closure counts disagree with methods.")
     require(m.get("raster_crs_epsg") == 5070 and m.get("nodata_value") == -9999,
             "unsupported_grid", "This initial exporter requires EPSG:5070 and NoData -9999.")
@@ -218,6 +271,115 @@ def validate_rasters(folder, names, methods, codebook):
         raise ExportError("raster_unreadable", "A required raster could not be validated.") from None
     return dict(ct_counts), dict(fl_counts)
 
+
+def _cover_nodata_rows(rows, methods):
+    """Validate split boundary NoData; normalize only in memory."""
+    labels = {
+        "outside_boundary_masked": "outside_boundary_cells",
+        "evt_nodata_inside_boundary": "evt_nodata_inside_boundary_cells",
+    }
+    if not any(row.get("output_label") in labels for row in rows):
+        return rows, None
+    accounting = _boundary_nodata_counts(methods)
+    require(accounting is not None, "invalid_statistics",
+            "Split NoData requires explicit boundary accounting.")
+    components = {}
+    valid_rows = []
+    for row in rows:
+        label = row.get("output_label")
+        if label not in labels:
+            require(row.get("output_code") != "-9999",
+                    "invalid_statistics",
+                    "Aggregate or unexpected NoData cannot accompany split NoData.")
+            valid_rows.append(row)
+            continue
+        require(label not in components, "invalid_statistics",
+                "Duplicate boundary NoData component.")
+        require(
+            row.get("output_code") == "-9999"
+            and row.get("candidate_forest_land") == "null",
+            "invalid_statistics",
+            "Boundary NoData must use code -9999 and a null forest-land flag."
+        )
+        text = row.get("cell_count")
+        require(
+            isinstance(text, str)
+            and re.fullmatch(r"0|[1-9][0-9]*", text) is not None,
+            "invalid_statistics",
+            "Boundary NoData cell counts must be nonnegative integer text."
+        )
+        n = int(text)
+        try:
+            acres = float(row["acres"])
+            square_meters = float(row["square_meters"])
+        except (KeyError, TypeError, ValueError, OverflowError):
+            raise ExportError("invalid_statistics",
+                              "Boundary NoData area fields are invalid.") from None
+        require(
+            n == accounting[labels[label]]
+            and _close(acres, n * 900 / ACRE_M2)
+            and _close(square_meters, n * 900),
+            "statistics_mismatch",
+            "Boundary NoData component counts or areas disagree with methods."
+        )
+        components[label] = n
+    require(set(components) == set(labels), "invalid_statistics",
+            "Both boundary NoData components must be present, including zeros.")
+    n = accounting["nodata_cell_count"]
+    normalized = valid_rows + [{
+        "output_code": "-9999",
+        "output_label": "nodata",
+        "candidate_forest_land": "null",
+        "cell_count": str(n),
+        "square_meters": str(n * 900),
+        "acres": str(n * 900 / ACRE_M2),
+    }]
+    return normalized, {
+        "components": components,
+        "total_nodata_cells": n,
+        "source_csv_modified": False,
+        "interpretation": "Split rows combined in memory for raster-count QC.",
+        "geographic_component_locations_independently_verified": False,
+    }
+
+
+
+def _forest_summary_includes_nodata(rows, methods, *, json_rows=False):
+    """Allow boundary valid-only summaries; retain legacy NoData requirements."""
+    if _boundary_nodata_counts(methods) is None:
+        return True
+    require(isinstance(rows, list) and rows, "invalid_statistics",
+            "Boundary forest-land statistics must be a nonempty list.")
+    codes = set()
+    for row in rows:
+        require(isinstance(row, dict), "invalid_statistics",
+                "Forest-land statistics rows must be objects.")
+        code = row.get("forest_land_code")
+        count = row.get("cell_count")
+        if json_rows:
+            require(type(code) is int and type(count) is int and count >= 0,
+                    "invalid_statistics",
+                    "Methods forest-land codes and counts must be JSON integers.")
+        else:
+            require(
+                isinstance(code, str) and code in {"-9999", "0", "1", "2"}
+                and isinstance(count, str)
+                and re.fullmatch(r"0|[1-9][0-9]*", count) is not None,
+                "invalid_statistics",
+                "Forest-land CSV codes or integer counts are invalid."
+            )
+            code = int(code)
+        require(code in {-9999, 0, 1, 2} and code not in codes,
+                "invalid_statistics",
+                "Unsupported or duplicate forest-land class.")
+        codes.add(code)
+    includes_nodata = -9999 in codes
+    if not includes_nodata:
+        require(codes == {0, 1, 2}, "invalid_statistics",
+                "Boundary valid-only summaries must record all three valid classes, including zeros.")
+    return includes_nodata
+
+
 def _check_statistics(folder, names, m, codebook, ct_counts, fl_counts):
     def counts_check(rows, code_key, actual, is_cover, include_nodata, *, json_rows=False):
         seen = set()
@@ -252,16 +414,40 @@ def _check_statistics(folder, names, m, codebook, ct_counts, fl_counts):
         needed = {k for k,v in actual.items() if v and (include_nodata or k != -9999)}
         require(needed <= seen and (include_nodata or -9999 not in seen),
                 "statistics_mismatch", "Statistics omit populated classes or mix NoData into valid classes.")
-    counts_check(_rows(folder/names["cover_type_acreage_csv"]), "output_code", ct_counts, True, True)
-    counts_check(_rows(folder/names["forest_land_acreage_csv"]), "forest_land_code", fl_counts, False, True)
+    cover_rows, cover_nodata_qc = _cover_nodata_rows(
+        _rows(folder/names["cover_type_acreage_csv"]), m
+    )
+    counts_check(cover_rows, "output_code", ct_counts, True, True)
+    forest_rows = _rows(folder/names["forest_land_acreage_csv"])
+    forest_csv_nodata = _forest_summary_includes_nodata(forest_rows, m)
+    counts_check(forest_rows, "forest_land_code", fl_counts, False, forest_csv_nodata)
     require(isinstance(m.get("cover_type_stats"), list) and isinstance(m.get("forest_land_stats"), list),
             "invalid_statistics", "Methods class statistics are missing.")
     counts_check(m["cover_type_stats"], "output_code", ct_counts, True, False, json_rows=True)
-    counts_check(m["forest_land_stats"], "forest_land_code", fl_counts, False, True, json_rows=True)
+    forest_methods_nodata = _forest_summary_includes_nodata(
+        m["forest_land_stats"], m, json_rows=True
+    )
+    counts_check(m["forest_land_stats"], "forest_land_code", fl_counts,
+                 False, forest_methods_nodata, json_rows=True)
     require(sum(ct_counts.values()) == m["total_pixels"] == sum(fl_counts.values()),
             "closure_failed", "Actual pixel counts do not close.")
     require(ct_counts.get(-9999, 0) == fl_counts.get(-9999, 0) == m["nodata_cell_count"],
             "closure_failed", "Actual NoData count disagrees with methods.")
+    forest_qc = None
+    if _boundary_nodata_counts(m) is not None:
+        forest_qc = {
+            "csv_summary_mode": "includes_nodata" if forest_csv_nodata else "valid_only",
+            "methods_summary_mode": "includes_nodata" if forest_methods_nodata else "valid_only",
+            "valid_class_counts_match_raster": True,
+            "nodata_cells": m["nodata_cell_count"],
+            "nodata_count_matches_methods_and_both_rasters": True,
+            "source_summaries_modified": False,
+            "note": "Unknown code 2 is a valid class, distinct from NoData -9999.",
+        }
+    return {
+        "cover_type_split_nodata": cover_nodata_qc,
+        "forest_land_summary_validation": forest_qc,
+    }
 
 GUIDE = """# Preliminary raster review package\n\nExtract this ZIP to a folder before opening its files.\n\n1. Open or create an ArcGIS Pro project. Use Add Data to add the two GeoTIFFs.\n2. Symbolize cover type with Unique Values and the included codebook CSV.\n3. Forest-land codes: 1 = candidate forest land, 0 = candidate nonforest,\n   2 = unknown; -9999 is NoData, not nonforest.\n4. Both rasters use a north-up 30 m EPSG:5070 grid.\n5. Review acreage CSVs, the original methods JSON, QC_AND_LIMITATIONS.json,\n   and PACKAGE_MANIFEST.json before interpretation.\n\nThis is a raster-only review package. No raw or generalized polygons,\nGeoPackage, candidate stands, or physical-accessibility layer is included.\nNo classification or generalization was rerun during export.\n\nThese are preliminary modeled candidate assignments, not field inventory,\nindependent accuracy validation, Tribal approval, Realty verification,\nmanagement authority, ownership, trust status, legal access, commercial\nstatus, or productivity determinations. Professional forestry review is\nrequired. Export does not certify that professional review occurred.\nSource paths inside the original methods document are server references,\nnot files included in this ZIP unless listed in PACKAGE_MANIFEST.json.\n\nThe manifest hashes every other package member; it does not hash itself.\nThe download response supplies a separate checksum for the complete ZIP.\n"""
 
@@ -289,22 +475,22 @@ def _build_review_package(outputs_dir, methods_filename, *, raster_validator=Non
             remaining_bytes = sum((root/n).lstat().st_size for k,n in names.items() if k != "methods_json")
         except OSError:
             raise ExportError("missing_or_unreadable_file", "A required artifact is missing or unreadable.") from None
-        require(used + remaining_bytes <= MAX_BYTES, "size_limit", "Package source files exceed the export size limit.")
+        require(used + remaining_bytes <= MAX_SOURCE_BYTES, "size_limit", "Package source files exceed the export size limit.")
         require(shutil.disk_usage(root).free >= 2 * remaining_bytes + used + 2 * 1024 * 1024,
                 "insufficient_space", "Insufficient temporary disk space for a safe snapshot and ZIP.")
         refs = m.get("artifacts")
         require(isinstance(refs, dict), "invalid_metadata", "Methods artifact references are missing.")
         for k, name in names.items():
-            ref = refs.get(k)
+            ref = _artifact_reference(refs, k, m)
             require(isinstance(ref, str) and "\\" not in ref and ".." not in ref.split("/") and ref.split("/")[-1] == name,
                     "identity_mismatch", "Methods artifact filenames disagree with the run.")
             if k != "methods_json":
-                used += _copy_regular(root / name, stage / name, MAX_BYTES-used)
-                require(used <= MAX_BYTES, "size_limit", "Package source files exceed the export size limit.")
+                used += _copy_regular(root / name, stage / name, MAX_SOURCE_BYTES-used)
+                require(used <= MAX_SOURCE_BYTES, "size_limit", "Package source files exceed the export size limit.")
         book = _codebook(stage / names["cover_type_codebook_csv"])
         validator = raster_validator or validate_rasters
         ct, fl = validator(stage, names, m, book)
-        _check_statistics(stage, names, m, book, ct, fl)
+        statistics_qc = _check_statistics(stage, names, m, book, ct, fl)
         polygon_qc = None
         polygon_members = []
         scope = "preliminary_raster_review_only"
@@ -341,6 +527,10 @@ def _build_review_package(outputs_dir, methods_filename, *, raster_validator=Non
             "unmapped_evt_codes_seen": m.get("unmapped_evt_codes_seen", []),
             "warnings": warnings,
         }
+        if statistics_qc["forest_land_summary_validation"] is not None:
+            qc["forest_land_summary_validation"] = statistics_qc["forest_land_summary_validation"]
+        if statistics_qc["cover_type_split_nodata"] is not None:
+            qc["cover_type_split_nodata"] = statistics_qc["cover_type_split_nodata"]
         if polygon_qc:
             qc["raw_polygon_validation"] = polygon_qc
             qc["checks"]["raw_polygons_validated_against_raster"] = True

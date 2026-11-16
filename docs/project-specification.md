@@ -708,13 +708,13 @@ repository audit, regression run, or independent GIS acceptance review.
 | Capability | Current status |
 |---|---|
 | Sample raster mapping | Demonstrated in the pilot; current regression and artifact checks remain separate requirements. |
-| Raw patch generation | Previously demonstrated in the pilot; the currently reported deployed GeoPackage requires availability and identity verification. |
+| Raw patch generation | Previously demonstrated in the pilot. A raw-patch GeoPackage was included in the November 16 sample package and opened in ArcGIS Pro 3.7.3 (operator-reported); independent verification of the file against the run record remains open. |
 | Generalization | Optional; source/test presence does not establish current execution, QC, or acceptance. |
 | Full-boundary readiness | Related modules were reported tracked; preflight is not full-boundary execution. |
 | Full-boundary mapping | Not yet demonstrated across the approved full project boundary. |
 | Raster review download | User confirmed successful sample-package download. |
-| Polygon-inclusive export | Not implemented by the current raster-only exporter. |
-| Final package completeness | Not accepted; required full-boundary and polygon deliverables remain unresolved. |
+| Polygon-inclusive export | Implemented in source. A sample-area package with raw polygons was downloaded and opened in ArcGIS Pro 3.7.3 (operator-reported, November 16, 2026). Not demonstrated for the full boundary; deployed build provenance unverified. |
+| Final package completeness | Not accepted; required full-boundary deliverables remain unresolved. Polygon packaging has been demonstrated only for a sample area. |
 | ArcGIS Pro final-package acceptance | Not yet established for the delivered package. |
 | Host approval enforcement | Not established by the enabled export switch or download success. |
 | Storage safeguards and renewal | Require explicit evidence for the documented controls and live acceptance cases. |

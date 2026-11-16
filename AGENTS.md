@@ -352,8 +352,11 @@ reviewed inputs.
 Inspect current export contracts before changing input schemas or packaging.
 Do not invent supported export parameters.
 
-The current documented exporter is raster-only. Extending it to include
-required polygons is an implementation task, not an agent-instruction change.
+The exporter accepts an optional raw polygon run (`raw_run_directory`);
+omitting it produces a raster-only intermediate. A polygon-inclusive sample
+package was observed on November 16, 2026; full-boundary packaging is not
+verified. Polygon packaging is an implementation task, not an
+agent-instruction change.
 
 Required final packaging must:
 - Include completed candidate rasters and raw cover-type polygons.

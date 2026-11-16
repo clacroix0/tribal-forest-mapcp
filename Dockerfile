@@ -11,7 +11,7 @@ ENV MAPCP_BIND_HOST=0.0.0.0
 WORKDIR /app
 
 COPY requirements-deploy.txt /app/requirements-deploy.txt
-RUN python -m pip install --no-cache-dir --only-binary=:all: -r requirements-deploy.txt && python -m pip check
+RUN python -m pip install --no-cache-dir --only-binary=:all: --no-binary=ibm-cos-sdk,ibm-cos-sdk-core,ibm-cos-sdk-s3transfer -r requirements-deploy.txt && python -m pip check
 RUN python -c "import geopandas, pyogrio, pyproj, rasterio, shapely; from rasterio.warp import transform_bounds; print('GIS import check passed')"
 
 RUN groupadd --gid 10001 mapcp && useradd --uid 10001 --gid 10001 --create-home mapcp

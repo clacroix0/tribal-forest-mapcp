@@ -3,7 +3,7 @@ import math
 import re
 from pathlib import Path
 
-from review_package import (ExportError, MAX_BYTES, MAX_METHODS_BYTES, _copy_regular,
+from review_package import (ExportError, MAX_SOURCE_BYTES, MAX_METHODS_BYTES, _copy_regular,
                             _rows, read_json_bytes, require, sha256_file)
 
 RAW_RUN_RE = re.compile(r"rawpatch_[0-9a-fA-F]{8}_v[1-9][0-9]{0,3}_[0-9]{8}T[0-9]{6}_[0-9a-f]{6}")
@@ -23,12 +23,12 @@ def snapshot_raw_patches(root, stage, run_name, used):
         remaining = sum((folder / name).lstat().st_size for name in POLYGON_NAMES)
     except OSError:
         raise ExportError("missing_polygon_artifact", "A required raw-patch artifact is missing.") from None
-    require(used + remaining <= MAX_BYTES, "size_limit", "Combined raster/polygon source size exceeds the export limit.")
+    require(used + remaining <= MAX_SOURCE_BYTES, "size_limit", "Combined raster/polygon source size exceeds the export limit.")
     import shutil
     require(shutil.disk_usage(root).free >= 2 * remaining + used + 2 * 1024 * 1024,
             "insufficient_space", "Insufficient temporary space for polygon snapshot and ZIP.")
     for name in POLYGON_NAMES:
-        limit = min(MAX_BYTES-used, MAX_METHODS_BYTES) if name.endswith((".json", ".csv")) else MAX_BYTES-used
+        limit = min(MAX_SOURCE_BYTES-used, MAX_METHODS_BYTES) if name.endswith((".json", ".csv")) else MAX_SOURCE_BYTES-used
         used += _copy_regular(folder / name, stage / name, limit)
     require(not folder.is_symlink() and not (folder / "FAILED_DO_NOT_USE.json").exists(),
             "source_changed", "Polygon run changed or failed during snapshot.")

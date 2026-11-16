@@ -103,28 +103,39 @@ This update does not establish full-boundary coverage or final package
 completion. Retain intermediate/sample labels until coverage, required layers,
 preview, and applicable specification gates are demonstrated.
 
-## Sample delivery verification, November 16, 2026
+## Sample delivery and ArcGIS Pro review, November 16, 2026
 
-Observed by the operator on a Windows workstation, using the deployed
-raster-only exporter (not the unmerged polygon-export branch):
+Operator-reported observations, not independently reproduced by this document:
 
-- A sample-area review ZIP was exported and downloaded through the Orchestrate
-  chat link in a browser. The file is 30,456 bytes.
-- The ZIP's SHA-256 was computed with PowerShell `Get-FileHash` and matched the
-  value reported by the tool:
+- A sample-area review ZIP of 30,456 bytes was exported and downloaded through
+  the Orchestrate chat link in a browser. Its SHA-256 matched the value reported
+  by the tool:
   `20d61c119d094601f7b0b28f5af8d7a8a189fd63d2936ee7c8b016d31a843d00`.
   This confirms download integrity only, not mapping accuracy.
+- The package manifest reports schema version 2 and package scope
+  `preliminary_raster_and_raw_polygon_review`. The ZIP contained the six
+  original artifacts, the three generated documents, and the three polygon
+  members: `raw_cover_type_patches.gpkg`, `raw_patch_acreage.csv` and
+  `raw_patch_qc.json`.
+- The operator opened the GeoPackage and the rasters in ArcGIS Pro 3.7.3 on a
+  local workstation. The layers loaded without errors, and the cover-type
+  classes looked plausible in an informal visual check. This is not an
+  independent accuracy assessment or a systematic review of the codebook.
+- The operator reported that Code Engine revision `tribal-forest-mapcp-00008`
+  was receiving 100% of traffic when this was checked. The Git commit and image
+  that produced that revision have not been verified. The preceding section's
+  status "not deployed" predates this observation and should be reconciled once
+  the build is verified.
 - Before invoking `export_arcgis_review_package`, the agent displayed a
   chat-text request asking the user to confirm the exact filenames and
   directory. This was an agent-authored conversational confirmation. A
-  platform-enforced approval control, bound to the exact tool inputs and
-  demonstrating that denial prevents invocation, has not been demonstrated.
+  platform-enforced approval control bound to the exact tool inputs, with denial
+  preventing invocation, has not been demonstrated.
 
-Not verified by this observation: ArcGIS Pro opening of the layers, full
-approved-boundary coverage, polygon delivery, the existence or availability of
-any raw-patch GeoPackage the agent mentioned, link expiry and renewal,
-replacement-instance recovery, and persistence of the export setting across
-redeployment. The package remains a sample and an intermediate deliverable.
+Not verified: full approved-boundary coverage, link expiry and renewal,
+replacement-instance recovery, persistence of the export setting across
+redeployment, build provenance of revision 00008, and independent accuracy.
+The package remains a sample and an intermediate deliverable.
 
 ## Current deployment and delivery checkpoint — November 13, 2026
 

@@ -1,0 +1,881 @@
+--- a/review_package.py
++++ b/review_package.py
+@@ -1,4 +1,4 @@
+-"""Bounded, raster-only MapCP review packaging. No network operations."""
++"""Bounded raster and optional existing raw-polygon packaging. No network operations."""
+ import csv
+ import hashlib
+ import json
+@@ -265,7 +265,7 @@
+ 
+ GUIDE = """# Preliminary raster review package\n\nExtract this ZIP to a folder before opening its files.\n\n1. Open or create an ArcGIS Pro project. Use Add Data to add the two GeoTIFFs.\n2. Symbolize cover type with Unique Values and the included codebook CSV.\n3. Forest-land codes: 1 = candidate forest land, 0 = candidate nonforest,\n   2 = unknown; -9999 is NoData, not nonforest.\n4. Both rasters use a north-up 30 m EPSG:5070 grid.\n5. Review acreage CSVs, the original methods JSON, QC_AND_LIMITATIONS.json,\n   and PACKAGE_MANIFEST.json before interpretation.\n\nThis is a raster-only review package. No raw or generalized polygons,\nGeoPackage, candidate stands, or physical-accessibility layer is included.\nNo classification or generalization was rerun during export.\n\nThese are preliminary modeled candidate assignments, not field inventory,\nindependent accuracy validation, Tribal approval, Realty verification,\nmanagement authority, ownership, trust status, legal access, commercial\nstatus, or productivity determinations. Professional forestry review is\nrequired. Export does not certify that professional review occurred.\nSource paths inside the original methods document are server references,\nnot files included in this ZIP unless listed in PACKAGE_MANIFEST.json.\n\nThe manifest hashes every other package member; it does not hash itself.\nThe download response supplies a separate checksum for the complete ZIP.\n"""
+ 
+-def _build_review_package(outputs_dir, methods_filename, *, raster_validator=None):
++def _build_review_package(outputs_dir, methods_filename, *, raster_validator=None, raw_run_directory=None):
+     require(isinstance(methods_filename, str) and METHODS_RE.fullmatch(methods_filename),
+             "invalid_input", "Supply a generated cmap_<8 hex>_vN_methods.json filename, not a path.")
+     root = Path(outputs_dir)
+@@ -305,17 +305,29 @@
+         validator = raster_validator or validate_rasters
+         ct, fl = validator(stage, names, m, book)
+         _check_statistics(stage, names, m, book, ct, fl)
++        polygon_qc = None
++        polygon_members = []
++        scope = "preliminary_raster_review_only"
++        schema = "1"
++        if raw_run_directory is not None:
++            from review_package_polygons import (POLYGON_NAMES, POLYGON_SCOPE,
++                                                 snapshot_raw_patches, validate_raw_patches)
++            used = snapshot_raw_patches(root, stage, raw_run_directory, used)
++            polygon_qc = validate_raw_patches(stage, names, m, raw_run_directory)
++            polygon_members = list(POLYGON_NAMES)
++            scope, schema = POLYGON_SCOPE, "2"
+         source_warnings = m.get("warnings", [])
+         require(isinstance(source_warnings, list) and len(source_warnings) <= 32 and
+                 all(isinstance(w, str) and len(w) <= 500 for w in source_warnings),
+                 "invalid_metadata", "Source warnings exceed the bounded response limit.")
+         warnings = [
+-            "Raster-only package; polygons and GeoPackage are not included.",
++            ("Raw polygons included; full approved-boundary coverage and ArcGIS Pro acceptance are not verified by export."
++             if polygon_qc else "Raster-only package; polygons and GeoPackage are not included."),
+             "Automated consistency checks are not independent classification accuracy or professional review.",
+             "Cover-scheme approval and source-dictionary lineage were not independently authenticated by export.",
+         ] + source_warnings
+         qc = {
+-            "package_scope": "preliminary_raster_review_only",
++            "package_scope": scope,
+             "checks": {"files_present": True, "raster_grid_and_tags_match": True,
+                        "forest_land_pixels_match_codebook": True, "csv_and_methods_match_rasters": True,
+                        "actual_cell_count_closure": True},
+@@ -329,18 +341,32 @@
+             "unmapped_evt_codes_seen": m.get("unmapped_evt_codes_seen", []),
+             "warnings": warnings,
+         }
+-        (stage/"OPEN_IN_ARCGIS_PRO.md").write_text(GUIDE, encoding="utf-8")
++        if polygon_qc:
++            qc["raw_polygon_validation"] = polygon_qc
++            qc["checks"]["raw_polygons_validated_against_raster"] = True
++            qc["full_approved_boundary_coverage_verified"] = False
++            qc["generalization_status"] = "not_included"
++        guide = GUIDE
++        if polygon_qc:
++            guide = guide.replace("# Preliminary raster review package", "# Preliminary raster and raw-polygon review package")
++            guide = guide.replace(
++                "This is a raster-only review package. No raw or generalized polygons,\nGeoPackage, candidate stands, or physical-accessibility layer is included.",
++                "Raw cover-type polygons are included; no generalized polygons, stands, or accessibility layers are included.")
++            guide += "\n## Raw cover-type polygons\nAdd raw_cover_type_patches.gpkg, layer candidate_cover_type_raw_patches.\nSymbolize output_label; inspect area_acres, forest_land_status, and review_flags.\nReview raw_patch_acreage.csv and raw_patch_qc.json. Flags are class-level, not measured patch evidence.\nRaw stair-step edges are intentional. NoData remains holes/gaps. These polygons are not stands.\nThe raster methods sentinel describes the earlier raster stage; raw_patch_qc.json records the later polygon stage.\nSource server paths in raw QC are provenance references, not portable file locations.\nThis export does not establish full-boundary coverage. Review the actual run extent before use.\n"
++        (stage/"OPEN_IN_ARCGIS_PRO.md").write_text(guide, encoding="utf-8")
+         (stage/"QC_AND_LIMITATIONS.json").write_text(json.dumps(qc, indent=2, allow_nan=False), encoding="utf-8")
+-        members = sorted(list(names.values()) + ["OPEN_IN_ARCGIS_PRO.md", "QC_AND_LIMITATIONS.json"])
++        members = sorted(list(names.values()) + polygon_members + ["OPEN_IN_ARCGIS_PRO.md", "QC_AND_LIMITATIONS.json"])
+         manifest = {
+-            "schema_version": "1", "package_id": package_id, "created_at_utc": utc_now(),
+-            "package_scope": "preliminary_raster_review_only", "job_id": m["job_id"],
++            "schema_version": schema, "package_id": package_id, "created_at_utc": utc_now(),
++            "package_scope": scope, "job_id": m["job_id"],
+             "crosswalk_id": m["crosswalk_id"], "crosswalk_version": m["crosswalk_version"],
+             "cover_scheme_id": m["cover_scheme_id"], "cover_scheme_version": m.get("cover_scheme_version"),
+             "source_methods_filename": methods_filename,
+             "files": [{"name": n, "bytes": (stage/n).stat().st_size, "sha256": sha256_file(stage/n)} for n in members],
+             "manifest_self_hash_excluded": True,
+         }
++        if polygon_qc:
++            manifest["raw_polygon_validation"] = polygon_qc
+         (stage/"PACKAGE_MANIFEST.json").write_text(json.dumps(manifest, indent=2, allow_nan=False), encoding="utf-8")
+         members.append("PACKAGE_MANIFEST.json")
+         archive = stage / "mapcp_raster_review.zip"
+@@ -354,7 +380,7 @@
+                 require(hashlib.sha256(z.read(item["name"])).hexdigest() == item["sha256"], "archive_failed", "ZIP content checksum failed.")
+         return {"status": "package_created", "package_id": package_id, "archive_path": str(archive),
+                 "package_bytes": archive.stat().st_size, "package_sha256": sha256_file(archive),
+-                "package_scope": manifest["package_scope"], "job_id": m["job_id"],
++                "package_scope": manifest["package_scope"], "schema_version": schema, "job_id": m["job_id"],
+                 "crosswalk_version": m["crosswalk_version"], "files": members, "warnings": warnings,
+                 "classification_rerun": False, "storage_uploaded": False}
+     except Exception:
+@@ -362,9 +388,9 @@
+         raise
+ 
+ 
+-def build_review_package(outputs_dir, methods_filename, *, raster_validator=None):
++def build_review_package(outputs_dir, methods_filename, *, raster_validator=None, raw_run_directory=None):
+     require(_BUILD_LOCK.acquire(blocking=False), "export_busy", "Another package build is running; no second build was started.")
+     try:
+-        return _build_review_package(outputs_dir, methods_filename, raster_validator=raster_validator)
++        return _build_review_package(outputs_dir, methods_filename, raster_validator=raster_validator, raw_run_directory=raw_run_directory)
+     finally:
+         _BUILD_LOCK.release()
+--- a/review_package_storage.py
++++ b/review_package_storage.py
+@@ -133,17 +133,37 @@
+     except Exception:
+         raise ExportError("storage_upload_failed", "COS upload failed or its outcome is unknown; export was not automatically retried.") from None
+ 
++def _descriptor_contract(descriptor):
++    schema, scope = descriptor.get("schema_version"), descriptor.get("package_scope")
++    legacy = schema == "1" and scope == "preliminary_raster_review_only"
++    polygons = schema == "2" and scope == "preliminary_raster_and_raw_polygon_review"
++    require(legacy or polygons, "storage_integrity_failed", "Unsupported stored package schema or scope.")
++    files = descriptor.get("files")
++    count = 12 if polygons else 9
++    require(isinstance(files, list) and len(files) == count and
++            all(isinstance(n, str) and re.fullmatch(r"[A-Za-z0-9_.-]+", n) for n in files) and
++            len(set(files)) == count,
++            "storage_integrity_failed", "Stored package file list is invalid.")
++    if polygons:
++        from review_package import METHODS_RE, SUFFIXES
++        methods = [n for n in files if METHODS_RE.fullmatch(n)]
++        require(len(methods) == 1, "storage_integrity_failed", "Polygon package methods identity is missing.")
++        prefix = methods[0].removesuffix("_methods.json")
++        expected = {prefix + "_" + suffix for suffix in SUFFIXES.values()} | {
++            "OPEN_IN_ARCGIS_PRO.md", "QC_AND_LIMITATIONS.json", "PACKAGE_MANIFEST.json",
++            "raw_cover_type_patches.gpkg", "raw_patch_acreage.csv", "raw_patch_qc.json"}
++        require(set(files) == expected, "storage_integrity_failed", "Polygon package member contract is invalid.")
++    return scope
++
++
+ def _link(client, config, descriptor, *, verify_contents=False):
+     package_id = _package_id(descriptor.get("package_id"))
+     checksum, size = descriptor.get("package_sha256"), descriptor.get("package_bytes")
+     require(isinstance(checksum, str) and re.fullmatch(r"[0-9a-f]{64}", checksum) and
+             type(size) is int and 0 < size <= MAX_BYTES,
+             "storage_integrity_failed", "Stored package descriptor is invalid.")
+-    files = descriptor.get("files")
+-    require(isinstance(files, list) and len(files) == 9 and
+-            all(isinstance(n, str) and re.fullmatch(r"[A-Za-z0-9_.-]+", n) for n in files) and
+-            len(set(files)) == 9,
+-            "storage_integrity_failed", "Stored package file list is invalid.")
++    scope = _descriptor_contract(descriptor)
++    files = descriptor["files"]
+     key = _key(config, package_id, "mapcp_raster_review.zip")
+     if verify_contents:
+         _verify_zip(client, config, key, size, checksum)
+@@ -168,18 +188,23 @@
+             all(isinstance(w, str) and len(w) <= 500 for w in warnings),
+             "storage_integrity_failed", "Stored warning metadata is invalid.")
+     return {"status": "download_ready", "package_id": package_id,
+-            "package_scope": "preliminary_raster_review_only", "package_bytes": size,
++            "package_scope": scope, "package_bytes": size,
+             "package_sha256": checksum, "files": files, "download_url": url,
+             "download_url_expires_at_utc": (now+timedelta(seconds=LINK_SECONDS)).isoformat(),
+             "download_url_lifetime_seconds": LINK_SECONDS,
+             "classification_rerun": False, "storage_uploaded": True,
+             "workstation_delivery_verified": False,
+             "warnings": ["Anyone holding this temporary link can download the package until it expires.",
+-                         "This is a raster-only package, not the complete polygon/GeoPackage deliverable.",
++                         ("Raw polygons included; full-boundary coverage and ArcGIS Pro acceptance remain unverified."
++                          if scope == "preliminary_raster_and_raw_polygon_review" else
++                          "This is a raster-only package, not the complete polygon/GeoPackage deliverable."),
+                          "Export does not verify professional review or independent classification accuracy."] + warnings}
+ 
+ def store_package(client, config, package):
+     package_id = _package_id(package["package_id"])
++    _descriptor_contract({"schema_version": package.get("schema_version", "1"),
++                          "package_scope": package.get("package_scope", "preliminary_raster_review_only"),
++                          "files": package.get("files")})
+     archive = Path(package["archive_path"])
+     require(archive.stat().st_size == package["package_bytes"] <= MAX_BYTES,
+             "package_changed", "Local archive size changed before upload.")
+@@ -188,8 +213,9 @@
+         _put(client, config, key, body, "application/zip", package["package_sha256"])
+     _verify_zip(client, config, key, package["package_bytes"], package["package_sha256"])
+     descriptor = {k: package[k] for k in ("package_id", "package_bytes", "package_sha256", "files", "job_id", "crosswalk_version", "warnings")}
+-    descriptor["schema_version"] = "1"
+-    descriptor["package_scope"] = "preliminary_raster_review_only"
++    descriptor["schema_version"] = package.get("schema_version", "1")
++    descriptor["package_scope"] = package.get("package_scope", "preliminary_raster_review_only")
++    _descriptor_contract(descriptor)
+     raw = json.dumps(descriptor, allow_nan=False).encode("utf-8")
+     require(len(raw) <= DESCRIPTOR_MAX, "size_limit", "Package descriptor exceeds its size limit.")
+     desc_key = _key(config, package_id, "package_record.json")
+@@ -202,9 +228,9 @@
+     package_id = _package_id(package_id)
+     raw = _get_bounded(client, config, _key(config, package_id, "package_record.json"), DESCRIPTOR_MAX)
+     descriptor = read_json_bytes(raw)
+-    require(descriptor.get("package_id") == package_id and descriptor.get("schema_version") == "1" and
+-            descriptor.get("package_scope") == "preliminary_raster_review_only",
++    require(descriptor.get("package_id") == package_id,
+             "storage_integrity_failed", "Stored package identity is invalid.")
++    _descriptor_contract(descriptor)
+     result = _link(client, config, descriptor, verify_contents=True)
+     result["storage_uploaded"] = False
+     result["link_renewed"] = True
+@@ -219,15 +245,20 @@
+     stage = "validate_request"
+     package_id = None
+     try:
+-        require(isinstance(request, dict) and set(request) <= {"action", "methods_filename", "package_id"},
++        require(isinstance(request, dict) and set(request) <= {"action", "methods_filename", "package_id", "raw_run_directory"},
+                 "invalid_input", "Unsupported export inputs.")
+         action = request.get("action")
+         methods, existing = request.get("methods_filename"), request.get("package_id")
++        raw_run = request.get("raw_run_directory")
+         require(action in {"create", "renew"}, "invalid_input", "Action must be create or renew.")
+         if action == "create":
+-            require(type(methods) is str and existing is None, "invalid_input", "Create requires only a methods filename.")
++            require(type(methods) is str and existing is None, "invalid_input", "Create requires a methods filename, optional raw-run name, and no package ID.")
++            if raw_run is not None:
++                from review_package_polygons import RAW_RUN_RE
++                require(type(raw_run) is str and RAW_RUN_RE.fullmatch(raw_run),
++                        "invalid_input", "Raw-run reference must be a generated folder name, never a path.")
+         else:
+-            require(methods is None, "invalid_input", "Renew accepts only an existing package ID.")
++            require(methods is None and raw_run is None, "invalid_input", "Renew accepts only an existing package ID.")
+             _package_id(existing)
+         stage = "configure_storage"
+         config = StorageConfig.from_environment(env)
+@@ -236,7 +267,9 @@
+             stage = "renew_link"
+             return renew_package(client, config, existing)
+         stage = "validate_and_package"
+-        package = (builder or build_review_package)(outputs_dir, methods)
++        build = builder or build_review_package
++        package = (build(outputs_dir, methods, raw_run_directory=raw_run)
++                   if raw_run is not None else build(outputs_dir, methods))
+         package_id = package["package_id"]
+         stage = "upload_verify_and_link"
+         return store_package(client, config, package)
+--- a/server.py
++++ b/server.py
+@@ -6861,7 +6861,7 @@
+     model_config = ConfigDict(extra="forbid")
+ 
+     action: Literal["create", "renew"] = Field(
+-        description="create packages and uploads an existing raster mapping; renew only refreshes a stored package link."
++        description="create packages an existing raster mapping with optional matching raw polygons; renew refreshes a stored package link."
+     )
+     methods_filename: str | None = Field(
+         default=None, max_length=160,
+@@ -6871,11 +6871,19 @@
+         default=None, max_length=36,
+         description="Renew only: canonical package UUID returned by a successful export."
+     )
++    raw_run_directory: str | None = Field(
++        default=None, max_length=160,
++        pattern=r"^rawpatch_[0-9a-fA-F]{8}_v[1-9][0-9]{0,3}_[0-9]{8}T[0-9]{6}_[0-9a-f]{6}$",
++        description=("Create only: optional exact rawpatch run folder name returned by "
++                     "create_candidate_cover_type_patches, directly inside outputs. Never a path. "
++                     "Must match methods_filename and source hashes. Required to include polygons; "
++                     "omitting it creates an explicitly raster-only intermediate package.")
++    )
+ 
+ 
+ @mcp.tool()
+ def export_arcgis_review_package(request: ReviewPackageExportRequest) -> dict:
+-    """Create a preliminary raster review ZIP and return a temporary download link.
++    """Package existing preliminary rasters and optional raw polygons; return a temporary link.
+ 
+     Requires explicit human approval in the host for these exact inputs before
+     invocation. A model-generated approval string is not accepted or requested.
+@@ -6897,7 +6905,12 @@
+     Initial scope: north-up EPSG:5070, 30 m preliminary single-band integer rasters,
+     at most four million pixels and 100 MiB of source artifacts. Package contains
+     two GeoTIFFs, three CSVs, original methods JSON, opening guide, QC/limitations,
+-    and checksum manifest. No polygons or GeoPackage are generated or implied.
++    and checksum manifest. When raw_run_directory is supplied, validate and include
++    the existing matching raw GeoPackage, polygon acreage CSV, and QC/provenance JSON.
++    Missing, failed, unsafe, or mismatched raw runs fail; no silent raster fallback.
++    This does not generate a new polygon run, reclassify, generalize, or verify
++    full-boundary coverage. No NAIP imagery is added. Existing raster-only packages
++    remain renewable. Omitting raw_run_directory creates a raster-only intermediate.
+     Automated checks are not professional review, land-status verification or
+     independent classification accuracy. Actual workstation delivery is unverified.
+ 
+--- a/docs/review-package-delivery.md
++++ b/docs/review-package-delivery.md
+@@ -13,6 +13,87 @@
+ establish that the current recovered source or deployed image passed fresh tests.
+ Implementation details below must be checked against current source before
+ extending the exporter or treating them as current acceptance evidence.
++
++## Polygon-inclusive export update — implementation draft, November 16, 2026
++
++Status: drafted from the supplied source associated with commit
++`91d862c5611326436147363ebaca2c42e50388b9`. Not applied to the VM or deployed.
++The historical implementation contract and test results below are retained;
++the proposed differences in this section become operative only after review,
++application, actual-GIS tests, and separately approved deployment.
++
++### Request and compatibility
++
++The existing tool remains `export_arcgis_review_package`.
++Create accepts `methods_filename` and optional `raw_run_directory` (a single
++existing generated rawpatch folder name directly inside outputs, never a path).
++Use exact identifiers returned by mapping and polygon tools; examples are not
++artifact discovery. Renew continues to accept only `package_id`.
++
++Omitting `raw_run_directory` preserves explicitly raster-only intermediate
++export. Supplying it requires matching, complete raw polygons; failures do not
++silently fall back to raster-only output. No mapping, new polygon run,
++generalization, or imagery acquisition occurs during export. Validation does
++reconstruct expected patches in memory to check actual geometry/attributes.
++
++Polygon-inclusive packages add three members to the original nine:
++- `raw_cover_type_patches.gpkg`
++- `raw_patch_acreage.csv`
++- `raw_patch_qc.json`
++
++The raw layer is `candidate_cover_type_raw_patches`. Original QC references to
++server paths are provenance, not promised portable file locations.
++The opening guide, QC, and checksum manifest are updated. The raster methods
++JSON is preserved unchanged: its polygon sentinel refers to the raster stage;
++the separate raw-patch QC records the later polygon stage.
++
++New polygon packages use schema `2` and scope
++`preliminary_raster_and_raw_polygon_review`. Existing raster-only schema `1`
++packages remain supported, including renewal. To avoid breaking old links, the
++stored ZIP object name and download filename remain `mapcp_raster_review.zip`
++for both versions; inspect scope and contents rather than infer from that name.
++
++### Validation and limits
++
++Validate run identity, exact source hashes, grid, successful raw-run status,
++absence of a failure marker, and required saved QC. Snapshot only fixed files
++from a validated nonsymbolic run directory. Reject symlink files and enforce
++combined source-size and temporary-space checks.
++
++Read the actual expected GeoPackage layer with a bounded feature count.
++Reuse existing raw-patch rules to verify geometry, patch IDs, attributes,
++connectivity, class flags, raster correspondence, NoData holes/gaps, per-class
++acreage, saved QC totals, and acreage CSV. No new forestry rule or tolerance
++is introduced. Generalized polygons, extra layers, or changed attributes are
++not accepted as raw patches by this contract.
++
++The existing limits remain: four million raster cells, 200,000 raw patches,
++100 MiB combined source artifacts, and 100 MiB ZIP. Polygon validation uses
++in-memory GIS operations and may be expensive near those limits; test resource
++use before larger execution. Existing limits are ceilings, not proof that all
++inputs near them are feasible.
++
++### Focused verification
++
++Run in an approved development environment from repository root:
++
++    python -m pytest tests/test_review_package_polygons.py tests/test_cover_type_patches.py -q -rs
++
++The new focused suite labels metadata/storage simulations and separately tests
++real synthetic raster-to-polygon export. Actual GIS tests require Rasterio and
++must not be counted as verified when skipped. The schema test isolates the
++Pydantic request class; it does not prove live MCP discovery or host binding.
++No historical comprehensive export suite is reconstructed by this change.
++
++Required remaining checks include actual GIS execution, relevant existing
++regression tests, current MCP discovery, build compatibility, preserved runtime
++configuration and approval controls, separately approved live delivery/renewal,
++and user-recorded ArcGIS Pro opening. No live COS result is implied by simulated
++storage tests. Do not alter the live container for tests.
++
++This update does not establish full-boundary coverage or final package
++completion. Retain intermediate/sample labels until coverage, required layers,
++preview, and applicable specification gates are demonstrated.
+ 
+ ## Current deployment and delivery checkpoint — November 13, 2026
+ 
+--- /dev/null
++++ b/review_package_polygons.py
+@@ -0,0 +1,145 @@
++"""Controlled raw-patch snapshots and validation for review export. No network."""
++import math
++import re
++from pathlib import Path
++
++from review_package import (ExportError, MAX_BYTES, MAX_METHODS_BYTES, _copy_regular,
++                            _rows, read_json_bytes, require, sha256_file)
++
++RAW_RUN_RE = re.compile(r"rawpatch_[0-9a-fA-F]{8}_v[1-9][0-9]{0,3}_[0-9]{8}T[0-9]{6}_[0-9a-f]{6}")
++POLYGON_NAMES = ("raw_cover_type_patches.gpkg", "raw_patch_acreage.csv", "raw_patch_qc.json")
++POLYGON_SCOPE = "preliminary_raster_and_raw_polygon_review"
++
++
++def snapshot_raw_patches(root, stage, run_name, used):
++    require(type(run_name) is str and RAW_RUN_RE.fullmatch(run_name),
++            "invalid_input", "Use the exact returned rawpatch run folder name, never a path.")
++    folder = root / run_name
++    require(not folder.is_symlink() and folder.is_dir() and folder.resolve().parent == root,
++            "unsafe_directory", "Raw-patch run must be a real directory directly inside outputs.")
++    require(not (folder / "FAILED_DO_NOT_USE.json").exists(),
++            "incomplete_polygons", "Failed polygon runs cannot be exported.")
++    try:
++        remaining = sum((folder / name).lstat().st_size for name in POLYGON_NAMES)
++    except OSError:
++        raise ExportError("missing_polygon_artifact", "A required raw-patch artifact is missing.") from None
++    require(used + remaining <= MAX_BYTES, "size_limit", "Combined raster/polygon source size exceeds the export limit.")
++    import shutil
++    require(shutil.disk_usage(root).free >= 2 * remaining + used + 2 * 1024 * 1024,
++            "insufficient_space", "Insufficient temporary space for polygon snapshot and ZIP.")
++    for name in POLYGON_NAMES:
++        limit = min(MAX_BYTES-used, MAX_METHODS_BYTES) if name.endswith((".json", ".csv")) else MAX_BYTES-used
++        used += _copy_regular(folder / name, stage / name, limit)
++    require(not folder.is_symlink() and not (folder / "FAILED_DO_NOT_USE.json").exists(),
++            "source_changed", "Polygon run changed or failed during snapshot.")
++    return used
++
++
++def validate_raw_patches(stage, names, methods, run_name):
++    report = read_json_bytes((stage / "raw_patch_qc.json").read_bytes())
++    require(report.get("document_type") == "candidate_cover_type_raw_patch_qc" and
++            report.get("status") == "complete_review_required" and
++            report.get("candidate_polygons_produced") is True,
++            "incomplete_polygons", "Polygon QC does not report a completed raw-patch run.")
++    for key in ("candidate_stands_produced", "new_classification_performed", "smoothing",
++                "small_patch_removal", "minimum_mapping_unit_applied"):
++        require(report.get(key) is False, "unsupported_polygons", "Only unchanged raw patches are supported.")
++    require(type(report.get("connectivity")) is int and report["connectivity"] == 4,
++            "unsupported_polygons", "Only the existing four-neighbor raw patches are supported.")
++    for key in ("job_id", "crosswalk_id", "crosswalk_version", "cover_scheme_id", "cover_scheme_version"):
++        require(report.get(key) == methods.get(key) and isinstance(methods.get(key), str),
++                "polygon_identity_mismatch", "Polygon and raster provenance disagree.")
++    prefix = names["methods_json"].removesuffix("_methods.json").removeprefix("cmap_")
++    require(run_name.startswith("rawpatch_" + prefix + "_"),
++            "polygon_identity_mismatch", "Raw-patch run name differs from the mapping run.")
++    require(report.get("source_methods_filename") == names["methods_json"] and
++            report.get("source_raster_filename") == names["cover_type_tif"],
++            "polygon_identity_mismatch", "Polygon source filenames differ from the packaged run.")
++    hashes = report.get("source_sha256", {})
++    for key, name in (("cover_type_tif", names["cover_type_tif"]),
++                      ("codebook_csv", names["cover_type_codebook_csv"]),
++                      ("slice3_methods", names["methods_json"])):
++        require(isinstance(hashes, dict) and hashes.get(key) == sha256_file(stage / name),
++                "polygon_source_changed", "Packaged source bytes differ from those used to generate the polygons.")
++    require(report.get("raster_shape") == methods["raster_shape"] and
++            report.get("raster_transform") == methods["raster_transform"],
++            "polygon_identity_mismatch", "Polygon source grid differs from the mapping run.")
++    saved = report.get("qc", {})
++    for key in ("geometry_valid", "raster_roundtrip_matches", "per_class_closure_matches",
++                "geopackage_readback_passed", "input_files_unchanged"):
++        require(isinstance(saved, dict) and saved.get(key) is True,
++                "incomplete_polygons", "Required polygon QC is missing or failed.")
++    try:
++        import geopandas as gpd
++        import numpy as np
++        import pyogrio
++        import rasterio
++        from pyproj import CRS
++        from cover_type_patches import (LAYER, MAX_PATCHES, _build_frame, _check_source,
++                                        _codebook, _polygon_qc, _readback)
++    except ImportError:
++        raise ExportError("gis_dependency_missing", "Polygon validation dependencies are unavailable.") from None
++    try:
++        gpkg = stage / "raw_cover_type_patches.gpkg"
++        layers = pyogrio.list_layers(gpkg)
++        require(len(layers) == 1 and layers[0][0] == LAYER,
++                "invalid_polygons", "GeoPackage must contain only the expected raw-patch layer.")
++        info = pyogrio.read_info(gpkg, layer=LAYER, force_feature_count=True)
++        require(0 < info["features"] <= MAX_PATCHES,
++                "size_limit", "Raw-patch feature count is empty or exceeds its existing limit.")
++        require(type(report.get("patch_count")) is int and report["patch_count"] == info["features"],
++                "invalid_polygons", "Polygon count differs from the recorded run.")
++        actual = gpd.read_file(gpkg, layer=LAYER, engine="pyogrio")
++        with rasterio.open(stage / names["cover_type_tif"]) as src:
++            masked = src.read(1, masked=True)
++            valid = ~np.ma.getmaskarray(masked)
++            data = np.asarray(masked.data).astype("int32")
++            book = _codebook(stage / names["cover_type_codebook_csv"])
++            observed = _check_source(data, valid, src.nodata, src.transform, src.crs, methods, book)
++            require(CRS.from_user_input(report.get("crs")) == CRS.from_user_input(src.crs),
++                    "polygon_identity_mismatch", "Polygon QC CRS differs from the raster.")
++            # Reconstruct expected patches for validation only; write no new polygon run.
++            expected = _build_frame(data, valid, src.transform, src.crs, book, methods)
++            expected["source_raster"] = names["cover_type_tif"]
++            expected["source_methods"] = names["methods_json"]
++            expected["provenance_reference"] = "raw_patch_qc.json"
++            require(set(actual.columns) == set(expected.columns),
++                    "invalid_polygons", "Unexpected or missing raw-patch attributes.")
++            _readback(expected, actual, src.crs)
++            fresh = _polygon_qc(actual, data, valid, src.transform, observed)
++        rows = _rows(stage / "raw_patch_acreage.csv")
++        require(len(rows) == len(fresh["per_class"]), "polygon_statistics_mismatch", "Polygon acreage classes differ.")
++        by_code = {}
++        for row in rows:
++            code = int(row["output_code"])
++            require(code not in by_code, "polygon_statistics_mismatch", "Duplicate polygon acreage class.")
++            by_code[code] = row
++        saved_rows = saved.get("per_class")
++        require(isinstance(saved_rows, list) and len(saved_rows) == len(fresh["per_class"]),
++                "polygon_statistics_mismatch", "Saved polygon QC classes differ.")
++        for expected_row in fresh["per_class"]:
++            row = by_code.get(expected_row["output_code"])
++            recorded = [r for r in saved_rows if isinstance(r, dict) and r.get("output_code") == expected_row["output_code"]]
++            require(row is not None and len(recorded) == 1, "polygon_statistics_mismatch", "Polygon class summary is missing or duplicated.")
++            for candidate in (row, recorded[0]):
++                for key, value in expected_row.items():
++                    if isinstance(value, str):
++                        ok = candidate.get(key) == value
++                    else:
++                        actual_value = float(candidate.get(key))
++                        ok = math.isfinite(actual_value) and math.isclose(actual_value, value, rel_tol=0, abs_tol=1e-8)
++                    require(ok, "polygon_statistics_mismatch", "Polygon summary disagrees with actual geometry.")
++        for key in ("total_valid_cells", "nodata_cells", "valid_area_m2", "valid_acres", "nodata_acres"):
++            value = saved.get(key)
++            require(type(value) in (int, float) and math.isfinite(value) and
++                    math.isclose(value, fresh[key], rel_tol=0, abs_tol=1e-8),
++                    "polygon_statistics_mismatch", "Saved polygon QC totals disagree with current geometry.")
++        return {"raw_run_directory": run_name, "layer": LAYER, "patch_count": len(actual),
++                "source_hashes_match": True, "geometry_and_attributes_match_raw_raster_patches": True,
++                "raster_roundtrip_matches": True, "acreage_summary_matches": True,
++                "valid_acres": fresh["valid_acres"], "nodata_cells": fresh["nodata_cells"],
++                "nodata_policy": "NoData remains holes/gaps, separately counted; it is not nonforest."}
++    except ExportError:
++        raise
++    except Exception:
++        raise ExportError("invalid_polygons", "Raw-patch geometry, attributes, or summaries failed validation.") from None
+--- /dev/null
++++ b/tests/test_review_package_polygons.py
+@@ -0,0 +1,357 @@
++"""Focused export tests. Storage/metadata simulations are explicitly labeled.
++Real raster/polygon integration tests skip if Rasterio is unavailable.
++"""
++import ast
++import csv
++import hashlib
++import io
++import json
++import uuid
++import zipfile
++from collections import Counter
++from pathlib import Path
++
++import pytest
++import review_package as rp
++import review_package_polygons as pp
++import review_package_storage as storage
++
++NAME = "cmap_12345678_v1_methods.json"
++JOB = "12345678-1111-2222-3333-444444444444"
++RUN = "rawpatch_12345678_v1_20261116T150000_abcdef"
++DATA = [[1, 1, 7], [1, -9999, 255], [7, 255, 255]]
++CT = Counter(v for row in DATA for v in row)
++FLAGS = {1: True, 7: None, 255: None, -9999: None}
++LABELS = {1: "candidate_P", 7: "candidate_RIP_UNCERTAIN", 255: "unmapped_evt", -9999: "nodata"}
++FL = Counter({1: 3, 2: 5, -9999: 1})
++TRANSFORM = [30., 0., 1000., 0., -30., 2000.]
++
++
++def write_csv(path, rows):
++    with path.open("w", newline="", encoding="utf-8") as stream:
++        writer = csv.DictWriter(stream, fieldnames=list(rows[0]))
++        writer.writeheader()
++        writer.writerows(rows)
++
++
++def raster_fixture(root, real=False):
++    root.mkdir(parents=True, exist_ok=True)
++    prefix = NAME.removesuffix("_methods.json")
++    names = {k: prefix + "_" + suffix for k, suffix in rp.SUFFIXES.items()}
++    stats = [{"output_code": code, "output_label": LABELS[code],
++              "candidate_forest_land": FLAGS[code], "cell_count": n,
++              "square_meters": n*900, "acres": n*900/rp.ACRE_M2}
++             for code, n in sorted(CT.items()) if code != -9999]
++    fl_stats = [{"forest_land_code": c, "cell_count": n, "acres": n*900/rp.ACRE_M2}
++                for c, n in sorted(FL.items())]
++    methods = {"document_type": "candidate_cover_type_methods_and_provenance",
++               "mapping_status": "complete", "rasters_written": True, "write_errors": [],
++               "job_id": JOB, "crosswalk_id": "synthetic", "crosswalk_version": "v1",
++               "cover_scheme_id": "synthetic_scheme", "cover_scheme_version": "v1",
++               "crosswalk_approval_note": "Synthetic fixture, not forestry approval.",
++               "sentinels": {"classification_performed": True, "crosswalk_applied": True,
++                             "candidate_cover_types_produced": True, "candidate_forest_land_produced": True,
++                             "field_inventory_performed": False,
++                             "authoritative_forest_land_determination_performed": False,
++                             "candidate_polygons_produced": False},
++               "raster_shape": [3, 3], "total_pixels": 9, "valid_cell_count": 8,
++               "nodata_cell_count": 1, "valid_acres": 8*900/rp.ACRE_M2,
++               "raster_crs_epsg": 5070, "nodata_value": -9999, "raster_transform": TRANSFORM,
++               "acreage_closure": {"cover_type_valid_sum_matches": True,
++                                   "forest_land_valid_sum_matches": True,
++                                   "total_pixel_sum_matches": True, "valid_cell_count": 8,
++                                   "cover_type_class_sum": 8, "forest_land_class_sum": 8,
++                                   "nodata_count": 1, "total_pixels": 9},
++               "cover_type_stats": stats, "forest_land_stats": fl_stats,
++               "artifacts": {k: str(root / n) for k, n in names.items()}, "warnings": [],
++               "universal_review_flags": []}
++    book = [{"output_code": c, "output_label": LABELS[c],
++             "candidate_forest_land": "true" if FLAGS[c] else "null",
++             "description": "Synthetic " + LABELS[c], "source_evt_codes": ""} for c in LABELS]
++    write_csv(root / names["cover_type_codebook_csv"], book)
++    ct_csv = [dict(r, candidate_forest_land="true" if r["candidate_forest_land"] else "null") for r in stats]
++    ct_csv.append({"output_code": -9999, "output_label": "nodata", "candidate_forest_land": "null",
++                   "cell_count": 1, "square_meters": 900, "acres": 900/rp.ACRE_M2})
++    write_csv(root / names["cover_type_acreage_csv"], ct_csv)
++    write_csv(root / names["forest_land_acreage_csv"], fl_stats)
++    (root / NAME).write_text(json.dumps(methods))
++    if real:
++        rasterio = pytest.importorskip("rasterio", reason="Actual GIS integration requires Rasterio")
++        import numpy as np
++        from rasterio.transform import Affine
++        a = np.array(DATA, dtype="int16")
++        b = np.where(a == -9999, -9999, np.where(a == 1, 1, 2)).astype("int16")
++        for key, data in (("cover_type_tif", a), ("forest_land_tif", b)):
++            with rasterio.open(root/names[key], "w", driver="GTiff", width=3, height=3,
++                               count=1, dtype="int16", crs=5070, transform=Affine(*TRANSFORM), nodata=-9999) as ds:
++                ds.write(data, 1)
++                ds.update_tags(**{k: methods[k] for k in ("job_id", "crosswalk_id", "crosswalk_version", "cover_scheme_id")})
++    else:
++        for key in ("cover_type_tif", "forest_land_tif"):
++            (root/names[key]).write_bytes(b"SIMULATED raster; not a GeoTIFF")
++    return names, methods
++
++
++def simulated_raster_validator(*args):
++    return dict(CT), dict(FL)
++
++
++def assert_archive(package):
++    with zipfile.ZipFile(package["archive_path"]) as z:
++        assert z.testzip() is None
++        manifest = json.loads(z.read("PACKAGE_MANIFEST.json"))
++        assert set(z.namelist()) == set(package["files"])
++        for item in manifest["files"]:
++            assert hashlib.sha256(z.read(item["name"])).hexdigest() == item["sha256"]
++    return manifest
++
++
++def test_simulated_legacy_raster_package(tmp_path):
++    raster_fixture(tmp_path)
++    package = rp.build_review_package(tmp_path, NAME, raster_validator=simulated_raster_validator)
++    assert len(package["files"]) == 9
++    assert assert_archive(package)["schema_version"] == "1"
++
++
++def test_simulated_polygon_packaging_contract(tmp_path, monkeypatch):
++    raster_fixture(tmp_path)
++    folder = tmp_path/RUN
++    folder.mkdir()
++    for name in pp.POLYGON_NAMES:
++        (folder/name).write_bytes(b"SIMULATED polygon artifact")
++    monkeypatch.setattr(pp, "validate_raw_patches", lambda *args: {"patch_count": 3})
++    package = rp.build_review_package(tmp_path, NAME, raw_run_directory=RUN,
++                                      raster_validator=simulated_raster_validator)
++    manifest = assert_archive(package)
++    assert len(package["files"]) == 12 and manifest["schema_version"] == "2"
++    assert set(pp.POLYGON_NAMES) <= set(package["files"])
++    with zipfile.ZipFile(package["archive_path"]) as z:
++        guide = z.read("OPEN_IN_ARCGIS_PRO.md").decode()
++        assert "This is a raster-only review package" not in guide
++        assert "raw_cover_type_patches.gpkg" in guide
++
++
++@pytest.mark.parametrize("bad", ["../"+RUN, "/tmp/"+RUN, "", "anything", RUN+"/x"])
++def test_unsafe_raw_reference_rejected(tmp_path, bad):
++    with pytest.raises(rp.ExportError, match="folder name"):
++        pp.snapshot_raw_patches(tmp_path, tmp_path, bad, 0)
++
++
++def test_missing_polygon_artifact_rejected(tmp_path):
++    (tmp_path/RUN).mkdir()
++    with pytest.raises(rp.ExportError) as exc:
++        pp.snapshot_raw_patches(tmp_path, tmp_path, RUN, 0)
++    assert exc.value.code == "missing_polygon_artifact"
++
++
++def test_failed_polygon_run_rejected(tmp_path):
++    (tmp_path/RUN).mkdir()
++    (tmp_path/RUN/"FAILED_DO_NOT_USE.json").write_text("{}")
++    with pytest.raises(rp.ExportError) as exc:
++        pp.snapshot_raw_patches(tmp_path, tmp_path, RUN, 0)
++    assert exc.value.code == "incomplete_polygons"
++
++
++def test_symlink_run_rejected(tmp_path):
++    target = tmp_path/"real"
++    target.mkdir()
++    (tmp_path/RUN).symlink_to(target, target_is_directory=True)
++    with pytest.raises(rp.ExportError):
++        pp.snapshot_raw_patches(tmp_path, tmp_path, RUN, 0)
++
++
++def test_combined_size_limit_enforced(tmp_path):
++    folder = tmp_path/RUN
++    folder.mkdir()
++    for n in pp.POLYGON_NAMES:
++        (folder/n).write_text("synthetic")
++    with pytest.raises(rp.ExportError) as exc:
++        pp.snapshot_raw_patches(tmp_path, tmp_path, RUN, rp.MAX_BYTES)
++    assert exc.value.code == "size_limit"
++
++
++def report_fixture(root):
++    names, methods = raster_fixture(root)
++    report = {"document_type": "candidate_cover_type_raw_patch_qc", "status": "complete_review_required",
++              "candidate_polygons_produced": True, "candidate_stands_produced": False,
++              "new_classification_performed": False, "smoothing": False,
++              "small_patch_removal": False, "minimum_mapping_unit_applied": False, "connectivity": 4,
++              **{k: methods[k] for k in ("job_id", "crosswalk_id", "crosswalk_version", "cover_scheme_id", "cover_scheme_version")},
++              "source_methods_filename": NAME, "source_raster_filename": names["cover_type_tif"],
++              "raster_shape": methods["raster_shape"], "raster_transform": TRANSFORM,
++              "source_sha256": {"cover_type_tif": rp.sha256_file(root/names["cover_type_tif"]),
++                                "codebook_csv": rp.sha256_file(root/names["cover_type_codebook_csv"]),
++                                "slice3_methods": rp.sha256_file(root/NAME)}}
++    return names, methods, report
++
++
++@pytest.mark.parametrize("change,code", [("job_id", "polygon_identity_mismatch"),
++                                         ("source_sha256", "polygon_source_changed"),
++                                         ("status", "incomplete_polygons")])
++def test_wrong_run_or_changed_source_rejected_before_gis(tmp_path, change, code):
++    names, methods, report = report_fixture(tmp_path)
++    report[change] = {} if change == "source_sha256" else "wrong"
++    (tmp_path/"raw_patch_qc.json").write_text(json.dumps(report))
++    with pytest.raises(rp.ExportError) as exc:
++        pp.validate_raw_patches(tmp_path, names, methods, RUN)
++    assert exc.value.code == code
++
++
++class SimulatedCOS:
++    def __init__(self):
++        self.objects = {}
++        self.puts = 0
++    def head_object(self, Bucket, Key):
++        if Key not in self.objects:
++            exc = RuntimeError("SIMULATED missing")
++            exc.response = {"Error": {"Code": "NoSuchKey"}}
++            raise exc
++        raw, meta = self.objects[Key]
++        return {"ContentLength": len(raw), "Metadata": meta}
++    def put_object(self, Bucket, Key, Body, ContentType, Metadata):
++        self.puts += 1
++        self.objects[Key] = (Body.read(), Metadata)
++    def get_object(self, Bucket, Key):
++        return {"Body": io.BytesIO(self.objects[Key][0])}
++    def generate_presigned_url(self, method, Params, ExpiresIn):
++        return CONFIG.endpoint + "/" + Params["Bucket"] + "/" + Params["Key"] + "?SIMULATED=not-a-real-link"
++
++
++CONFIG = storage.StorageConfig("synthetic-bucket", "https://s3.ca-tor.cloud-object-storage.appdomain.cloud",
++                               "ca-tor", "mapcp-review/", "SIMULATED", "SIMULATED")
++
++
++@pytest.mark.parametrize("polygons", [False, True])
++def test_simulated_storage_and_renewal(tmp_path, monkeypatch, polygons):
++    raster_fixture(tmp_path)
++    if polygons:
++        (tmp_path/RUN).mkdir()
++        for n in pp.POLYGON_NAMES:
++            (tmp_path/RUN/n).write_text("SIMULATED")
++        monkeypatch.setattr(pp, "validate_raw_patches", lambda *args: {"patch_count": 1})
++    package = rp.build_review_package(tmp_path, NAME, raster_validator=simulated_raster_validator,
++                                      raw_run_directory=RUN if polygons else None)
++    client = SimulatedCOS()
++    result = storage.store_package(client, CONFIG, package)
++    assert result["package_scope"] == package["package_scope"]
++    puts = client.puts
++    renewed = storage.renew_package(client, CONFIG, package["package_id"])
++    assert renewed["link_renewed"] and not renewed["storage_uploaded"]
++    assert client.puts == puts
++    assert renewed["package_scope"] == package["package_scope"]
++    key = storage._key(CONFIG, package["package_id"], "mapcp_raster_review.zip")
++    raw, meta = client.objects[key]
++    client.objects[key] = (b"X" + raw[1:], meta)
++    with pytest.raises(rp.ExportError):
++        storage.renew_package(client, CONFIG, package["package_id"])
++
++
++def test_unknown_descriptor_scope_rejected():
++    with pytest.raises(rp.ExportError):
++        storage._descriptor_contract({"schema_version": "9", "package_scope": "anything", "files": []})
++
++
++def test_polygon_descriptor_missing_member_rejected():
++    with pytest.raises(rp.ExportError):
++        storage._descriptor_contract({"schema_version": "2", "package_scope": pp.POLYGON_SCOPE,
++                                      "files": ["file"+str(i) for i in range(12)]})
++
++
++@pytest.mark.parametrize("payload", [
++    {"action": "create", "methods_filename": NAME, "raw_run_directory": "../bad"},
++    {"action": "renew", "package_id": str(uuid.uuid4()), "raw_run_directory": RUN}])
++def test_invalid_request_does_not_configure_storage(tmp_path, payload):
++    result = storage.deliver_review_package(tmp_path, payload, env={"MAPCP_REVIEW_EXPORT_ENABLED": "true"})
++    assert result["status"] == "failed" and result["stage"] == "validate_request"
++
++
++def test_server_export_schema_accepts_raw_name_only():
++    from pydantic import BaseModel, ConfigDict, Field, ValidationError
++    from typing import Literal
++    root = Path(__file__).resolve().parent
++    server = root/"server.py"
++    if not server.is_file():
++        server = root.parent/"server.py"
++    tree = ast.parse(server.read_text())
++    cls = next(node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == "ReviewPackageExportRequest")
++    ns = dict(BaseModel=BaseModel, ConfigDict=ConfigDict, Field=Field, Literal=Literal)
++    exec(compile(ast.Module(body=[cls], type_ignores=[]), str(server), "exec"), ns)
++    request_type = ns["ReviewPackageExportRequest"]
++    assert request_type(action="create", methods_filename=NAME, raw_run_directory=RUN).raw_run_directory == RUN
++    with pytest.raises(ValidationError):
++        request_type(action="create", methods_filename=NAME, raw_run_directory="../"+RUN)
++
++
++@pytest.fixture
++def actual_run(tmp_path):
++    pytest.importorskip("rasterio", reason="Actual GIS integration requires Rasterio")
++    import cover_type_patches as patches
++    raster_fixture(tmp_path, real=True)
++    result = patches.create_raw_cover_type_patches(tmp_path, patches.RawPatchRequest(methods_filename=NAME))
++    assert result.status == "complete_review_required", result.errors
++    return tmp_path, Path(result.artifacts["geopackage"]).parent.name
++
++
++def test_actual_polygon_export_and_checksums(actual_run):
++    root, run = actual_run
++    before = {str(p.relative_to(root)): rp.sha256_file(p) for p in root.rglob("*") if p.is_file()}
++    package = rp.build_review_package(root, NAME, raw_run_directory=run)
++    manifest = assert_archive(package)
++    assert manifest["raw_polygon_validation"]["nodata_cells"] == 1
++    assert manifest["raw_polygon_validation"]["source_hashes_match"]
++    assert all(rp.sha256_file(root/p) == checksum for p, checksum in before.items())
++
++
++@pytest.mark.parametrize("damage", ["geometry", "attribute", "acreage", "corrupt", "missing"])
++def test_actual_polygon_damage_rejected(actual_run, damage):
++    import geopandas as gpd
++    import cover_type_patches as patches
++    root, run = actual_run
++    folder = root/run
++    if damage in ("geometry", "attribute"):
++        path = folder/"raw_cover_type_patches.gpkg"
++        frame = gpd.read_file(path, layer=patches.LAYER, engine="pyogrio")
++        if damage == "geometry":
++            frame.loc[0, "geometry"] = frame.geometry.iloc[0].buffer(-1)
++        else:
++            frame.loc[0, "forest_land_status"] = "nonforest"
++        path.unlink()
++        frame.to_file(path, layer=patches.LAYER, driver="GPKG", engine="pyogrio", index=False)
++    elif damage == "acreage":
++        path = folder/"raw_patch_acreage.csv"
++        rows = list(csv.DictReader(path.open()))
++        rows[0]["acres"] = "9999"
++        write_csv(path, rows)
++    elif damage == "corrupt":
++        (folder/"raw_cover_type_patches.gpkg").write_bytes(b"not a GeoPackage")
++    else:
++        (folder/"raw_cover_type_patches.gpkg").unlink()
++    with pytest.raises(rp.ExportError):
++        rp.build_review_package(root, NAME, raw_run_directory=run)
++
++
++
++def test_simulated_create_forwards_raw_reference(tmp_path, monkeypatch):
++    raster_fixture(tmp_path)
++    (tmp_path/RUN).mkdir()
++    for n in pp.POLYGON_NAMES:
++        (tmp_path/RUN/n).write_text("SIMULATED")
++    monkeypatch.setattr(pp, "validate_raw_patches", lambda *args: {"patch_count": 1})
++    monkeypatch.setattr(storage.StorageConfig, "from_environment", classmethod(lambda cls, env: CONFIG))
++    client = SimulatedCOS()
++    def build(root, methods, *, raw_run_directory):
++        assert raw_run_directory == RUN
++        return rp.build_review_package(root, methods, raw_run_directory=raw_run_directory,
++                                       raster_validator=simulated_raster_validator)
++    result = storage.deliver_review_package(tmp_path,
++        {"action": "create", "methods_filename": NAME, "raw_run_directory": RUN, "package_id": None},
++        env={"MAPCP_REVIEW_EXPORT_ENABLED": "true"}, client_factory=lambda config: client, builder=build)
++    assert result["status"] == "download_ready" and result["package_scope"] == pp.POLYGON_SCOPE
++
++
++def test_failed_polygon_build_has_no_raster_fallback(tmp_path):
++    raster_fixture(tmp_path)
++    with pytest.raises(rp.ExportError):
++        rp.build_review_package(tmp_path, NAME, raw_run_directory=RUN,
++                                raster_validator=simulated_raster_validator)
++    assert list((tmp_path/"review_packages").iterdir()) == []

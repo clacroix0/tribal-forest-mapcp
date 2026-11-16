@@ -17,7 +17,8 @@ extending the exporter or treating them as current acceptance evidence.
 ## Polygon-inclusive export update — implementation draft, November 16, 2026
 
 Status, November 16, 2026: applied on VM branch `feature/polygon-review-export`
-(base `91d862c5611326436147363ebaca2c42e50388b9`); not deployed.
+(base `91d862c5611326436147363ebaca2c42e50388b9`). Superseded as to
+deployment: see the November 16 sample delivery section below.
 
 Observed on the VM with a Python 3.12 test virtual environment built from the
 deployment pins, excluding the IBM COS SDK group (package versions not recorded
@@ -121,11 +122,14 @@ Operator-reported observations, not independently reproduced by this document:
   local workstation. The layers loaded without errors, and the cover-type
   classes looked plausible in an informal visual check. This is not an
   independent accuracy assessment or a systematic review of the codebook.
-- The operator reported that Code Engine revision `tribal-forest-mapcp-00008`
-  was receiving 100% of traffic when this was checked. The Git commit and image
-  that produced that revision have not been verified. The preceding section's
-  status "not deployed" predates this observation and should be reconciled once
-  the build is verified.
+- The operator reported that Code Engine revision `tribal-forest-mapcp-00008`,
+  receiving 100% of traffic, was deployed on the morning of November 16, 2026,
+  and believes this was done from Cloud Shell. Eric was not involved. The Code
+  Engine console shows an image in IBM Container Registry
+  (`us.icr.io/gsa-hackathon-cr-student9/tribal-forest-mapcp`, referenced by
+  digest) and no Code Engine image build. The Git commit or working-tree state
+  used to build that image was not recorded, so the deployed code is not
+  verified to equal any commit in Git.
 - Before invoking `export_arcgis_review_package`, the agent displayed a
   chat-text request asking the user to confirm the exact filenames and
   directory. This was an agent-authored conversational confirmation. A

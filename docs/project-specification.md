@@ -713,7 +713,7 @@ repository audit, regression run, or independent GIS acceptance review.
 | Full-boundary readiness | Related modules were reported tracked; preflight is not full-boundary execution. |
 | Full-boundary mapping | Not yet demonstrated across the approved full project boundary. |
 | Raster review download | User confirmed successful sample-package download. |
-| Polygon-inclusive export | Implemented in source on the feature branch. A sample-area package with raw polygons was downloaded and opened in ArcGIS Pro 3.7.3 (operator-reported, November 16, 2026). Not demonstrated for the full boundary; deployed build provenance unverified. |
+| Polygon-inclusive export | Implemented in source. A sample-area package with raw polygons was downloaded and opened in ArcGIS Pro 3.7.3 (operator-reported, November 16, 2026). Not demonstrated for the full boundary; deployed build provenance unverified. |
 | Final package completeness | Not accepted; required full-boundary deliverables remain unresolved. Polygon packaging has been demonstrated only for a sample area. |
 | ArcGIS Pro final-package acceptance | Not yet established for the delivered package. |
 | Host approval enforcement | Not established by the enabled export switch or download success. |

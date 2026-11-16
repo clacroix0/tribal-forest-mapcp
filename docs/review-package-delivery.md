@@ -8,9 +8,13 @@ Local VM working branch: `fix/full-boundary-export-compat`.
 
 Base commit: `7cfb5bbc8b37ea8d61694a280de3aec3bc30199d`.
 
-The compatibility edits and tests are uncommitted at this checkpoint.
-The base commit does not contain these working-tree changes. No deployment
-of this compatibility repair has been demonstrated.
+Historical pre-commit checkpoint: the compatibility edits and tests were
+uncommitted when this section was first written. They were subsequently
+committed as b3e45e6fc4915592420680a5bda36bdba449e688 and pushed to
+`origin/fix/full-boundary-export-compat`, as confirmed by operator-provided
+Git output on November 16, 2026. At that check, GitHub `main` remained at
+the base commit above. Deployment of this compatibility repair remains
+unverified.
 
 This section supersedes older descriptions below only for the reviewed local
 working-tree behavior and its dated tests. Historical deployment and sample
@@ -107,7 +111,11 @@ These results do not establish literal 192 MiB/100 MiB execution, exact-byte
 ZIP-boundary acceptance, near-limit resource performance, or live storage
 enforcement. Storage tests in the focused suite use simulated COS.
 
-### Remaining acceptance work
+### Remaining acceptance work at the historical pre-commit checkpoint
+
+This list records the earlier checkpoint, not a current task list. The later
+sections record broader regression evidence, the real package build and review,
+and subsequent Git and Orchestrate delivery observations.
 
 - Review broader regression coverage beyond the three files reported above.
 - Review and commit the complete change only after explicit approval; include
@@ -193,9 +201,12 @@ it as satisfying every final-package requirement. Independent accuracy,
 approval-history authentication, separately verified approved-boundary
 completeness, and the previously documented security limitations remain open.
 
-At this checkpoint, the compatibility repair is local and uncommitted.
-It has not been demonstrated in the backend called by Orchestrate.
-Do not imply that the accepted VM artifacts are present in a deployed container.
+At this historical pre-host-test checkpoint, the compatibility repair was
+local and uncommitted. The later Git checkpoint below records its commit and
+push. Execution of the repaired boundary-export path in the backend called by
+Orchestrate remains unverified. Renewal of the existing stored package does not
+establish that its original VM source artifacts are present in a deployed
+container.
 
 Before host testing, identify and approve the exact reviewed commit/build,
 preserve required runtime configuration and artifacts, verify backend revision
@@ -203,6 +214,50 @@ and tool binding, and obtain approval for each consequential export/storage
 operation. Do not remap merely to recover or demonstrate this accepted package.
 
 This record authorizes no commit, push, deployment, cloud upload, or submission.
+
+### Subsequent Git and Orchestrate delivery checkpoint - November 16, 2026
+
+#### Git synchronization
+
+Operator-provided Git output confirmed:
+
+- VM branch: `fix/full-boundary-export-compat`.
+- VM HEAD and matching GitHub branch:
+  `b3e45e6fc4915592420680a5bda36bdba449e688`.
+- Commit title: `Fix boundary mapping review export compatibility`.
+- Working tree: clean at the time of the reported check.
+- GitHub `main`: `7cfb5bbc8b37ea8d61694a280de3aec3bc30199d`.
+- The compatibility fix was pushed to its branch but was not yet merged into
+  `main` at that check.
+
+These observations establish remote preservation of the committed branch,
+not deployed-code parity.
+
+#### Supervised Orchestrate renewal and user-confirmed contents
+
+The user explicitly approved one supervised renewal of the existing accepted
+public-prototype package
+`51b15397-90a8-4c9e-937d-ed6dee7d411c`.
+
+The pasted Orchestrate response reported successful renewal, a one-hour link,
+expiration at `2026-11-16T23:36:41Z`, and the same package size and SHA-256
+recorded above. The user subsequently confirmed that the downloaded package
+contained all expected contents, including raw polygons.
+
+This is operator-reported Orchestrate/COS delivery evidence for the existing
+package, supplementing the earlier manual workstation-transfer record.
+The complete tool activity trace was not supplied for this checkpoint;
+exactly one invocation and absence of additional processing were not
+independently verified. No fresh checksum calculation or additional ArcGIS Pro
+inspection is inferred from the user's contents confirmation.
+
+Platform-enforced approval remains unverified. The one-call conversational
+approval does not demonstrate an enforced platform approval mechanism.
+
+The successful renewal does not establish execution of the compatibility
+repair in the deployed backend, a new package build, new mapping, independent
+classification accuracy, or separately verified approved-boundary coverage.
+Signed download URLs are intentionally omitted from this record.
 
 ---
 

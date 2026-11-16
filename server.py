@@ -6861,7 +6861,7 @@ class ReviewPackageExportRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     action: Literal["create", "renew"] = Field(
-        description="create packages and uploads an existing raster mapping; renew only refreshes a stored package link."
+        description="create packages an existing raster mapping with optional matching raw polygons; renew refreshes a stored package link."
     )
     methods_filename: str | None = Field(
         default=None, max_length=160,
@@ -6871,11 +6871,19 @@ class ReviewPackageExportRequest(BaseModel):
         default=None, max_length=36,
         description="Renew only: canonical package UUID returned by a successful export."
     )
+    raw_run_directory: str | None = Field(
+        default=None, max_length=160,
+        pattern=r"^rawpatch_[0-9a-fA-F]{8}_v[1-9][0-9]{0,3}_[0-9]{8}T[0-9]{6}_[0-9a-f]{6}$",
+        description=("Create only: optional exact rawpatch run folder name returned by "
+                     "create_candidate_cover_type_patches, directly inside outputs. Never a path. "
+                     "Must match methods_filename and source hashes. Required to include polygons; "
+                     "omitting it creates an explicitly raster-only intermediate package.")
+    )
 
 
 @mcp.tool()
 def export_arcgis_review_package(request: ReviewPackageExportRequest) -> dict:
-    """Create a preliminary raster review ZIP and return a temporary download link.
+    """Package existing preliminary rasters and optional raw polygons; return a temporary link.
 
     Requires explicit human approval in the host for these exact inputs before
     invocation. A model-generated approval string is not accepted or requested.
@@ -6897,7 +6905,12 @@ def export_arcgis_review_package(request: ReviewPackageExportRequest) -> dict:
     Initial scope: north-up EPSG:5070, 30 m preliminary single-band integer rasters,
     at most four million pixels and 100 MiB of source artifacts. Package contains
     two GeoTIFFs, three CSVs, original methods JSON, opening guide, QC/limitations,
-    and checksum manifest. No polygons or GeoPackage are generated or implied.
+    and checksum manifest. When raw_run_directory is supplied, validate and include
+    the existing matching raw GeoPackage, polygon acreage CSV, and QC/provenance JSON.
+    Missing, failed, unsafe, or mismatched raw runs fail; no silent raster fallback.
+    This does not generate a new polygon run, reclassify, generalize, or verify
+    full-boundary coverage. No NAIP imagery is added. Existing raster-only packages
+    remain renewable. Omitting raw_run_directory creates a raster-only intermediate.
     Automated checks are not professional review, land-status verification or
     independent classification accuracy. Actual workstation delivery is unverified.
 

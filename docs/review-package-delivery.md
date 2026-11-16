@@ -14,6 +14,95 @@ establish that the current recovered source or deployed image passed fresh tests
 Implementation details below must be checked against current source before
 extending the exporter or treating them as current acceptance evidence.
 
+## Polygon-inclusive export update — implementation draft, November 16, 2026
+
+Status, November 16, 2026: applied on VM branch `feature/polygon-review-export`
+(base `91d862c5611326436147363ebaca2c42e50388b9`); not deployed.
+
+Observed on the VM with a Python 3.12 test virtual environment built from the
+deployment pins, excluding the IBM COS SDK group (package versions not recorded
+here): focused run of tests/test_review_package_polygons.py and
+tests/test_cover_type_patches.py, 65 passed, 0 skipped; full tests run,
+519 passed, 7 skipped (local Mescalero manifest, EVT-label, and crosswalk
+artifacts). Storage tests use simulated COS; GIS tests use synthetic fixtures.
+
+Not verified: MCP discovery, Orchestrate tool binding, export of a real mapped
+run, live COS delivery or renewal, deployed-image build, and ArcGIS Pro opening.
+The historical results below are dated evidence, not results for this change.
+
+### Request and compatibility
+
+The existing tool remains `export_arcgis_review_package`.
+Create accepts `methods_filename` and optional `raw_run_directory` (a single
+existing generated rawpatch folder name directly inside outputs, never a path).
+Use exact identifiers returned by mapping and polygon tools; examples are not
+artifact discovery. Renew continues to accept only `package_id`.
+
+Omitting `raw_run_directory` preserves explicitly raster-only intermediate
+export. Supplying it requires matching, complete raw polygons; failures do not
+silently fall back to raster-only output. No mapping, new polygon run,
+generalization, or imagery acquisition occurs during export. Validation does
+reconstruct expected patches in memory to check actual geometry/attributes.
+
+Polygon-inclusive packages add three members to the original nine:
+- `raw_cover_type_patches.gpkg`
+- `raw_patch_acreage.csv`
+- `raw_patch_qc.json`
+
+The raw layer is `candidate_cover_type_raw_patches`. Original QC references to
+server paths are provenance, not promised portable file locations.
+The opening guide, QC, and checksum manifest are updated. The raster methods
+JSON is preserved unchanged: its polygon sentinel refers to the raster stage;
+the separate raw-patch QC records the later polygon stage.
+
+New polygon packages use schema `2` and scope
+`preliminary_raster_and_raw_polygon_review`. Existing raster-only schema `1`
+packages remain supported, including renewal. To avoid breaking old links, the
+stored ZIP object name and download filename remain `mapcp_raster_review.zip`
+for both versions; inspect scope and contents rather than infer from that name.
+
+### Validation and limits
+
+Validate run identity, exact source hashes, grid, successful raw-run status,
+absence of a failure marker, and required saved QC. Snapshot only fixed files
+from a validated nonsymbolic run directory. Reject symlink files and enforce
+combined source-size and temporary-space checks.
+
+Read the actual expected GeoPackage layer with a bounded feature count.
+Reuse existing raw-patch rules to verify geometry, patch IDs, attributes,
+connectivity, class flags, raster correspondence, NoData holes/gaps, per-class
+acreage, saved QC totals, and acreage CSV. No new forestry rule or tolerance
+is introduced. Generalized polygons, extra layers, or changed attributes are
+not accepted as raw patches by this contract.
+
+The existing limits remain: four million raster cells, 200,000 raw patches,
+100 MiB combined source artifacts, and 100 MiB ZIP. Polygon validation uses
+in-memory GIS operations and may be expensive near those limits; test resource
+use before larger execution. Existing limits are ceilings, not proof that all
+inputs near them are feasible.
+
+### Focused verification
+
+Run in an approved development environment from repository root:
+
+    python -m pytest tests/test_review_package_polygons.py tests/test_cover_type_patches.py -q -rs
+
+The new focused suite labels metadata/storage simulations and separately tests
+real synthetic raster-to-polygon export. Actual GIS tests require Rasterio and
+must not be counted as verified when skipped. The schema test isolates the
+Pydantic request class; it does not prove live MCP discovery or host binding.
+No historical comprehensive export suite is reconstructed by this change.
+
+Required remaining checks include actual GIS execution, relevant existing
+regression tests, current MCP discovery, build compatibility, preserved runtime
+configuration and approval controls, separately approved live delivery/renewal,
+and user-recorded ArcGIS Pro opening. No live COS result is implied by simulated
+storage tests. Do not alter the live container for tests.
+
+This update does not establish full-boundary coverage or final package
+completion. Retain intermediate/sample labels until coverage, required layers,
+preview, and applicable specification gates are demonstrated.
+
 ## Current deployment and delivery checkpoint — November 13, 2026
 
 ### Confirmed or user-reported observations

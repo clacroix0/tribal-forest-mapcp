@@ -1,4 +1,4 @@
-"""Bounded, raster-only MapCP review packaging. No network operations."""
+"""Bounded raster and optional existing raw-polygon packaging. No network operations."""
 import csv
 import hashlib
 import json
@@ -265,7 +265,7 @@ def _check_statistics(folder, names, m, codebook, ct_counts, fl_counts):
 
 GUIDE = """# Preliminary raster review package\n\nExtract this ZIP to a folder before opening its files.\n\n1. Open or create an ArcGIS Pro project. Use Add Data to add the two GeoTIFFs.\n2. Symbolize cover type with Unique Values and the included codebook CSV.\n3. Forest-land codes: 1 = candidate forest land, 0 = candidate nonforest,\n   2 = unknown; -9999 is NoData, not nonforest.\n4. Both rasters use a north-up 30 m EPSG:5070 grid.\n5. Review acreage CSVs, the original methods JSON, QC_AND_LIMITATIONS.json,\n   and PACKAGE_MANIFEST.json before interpretation.\n\nThis is a raster-only review package. No raw or generalized polygons,\nGeoPackage, candidate stands, or physical-accessibility layer is included.\nNo classification or generalization was rerun during export.\n\nThese are preliminary modeled candidate assignments, not field inventory,\nindependent accuracy validation, Tribal approval, Realty verification,\nmanagement authority, ownership, trust status, legal access, commercial\nstatus, or productivity determinations. Professional forestry review is\nrequired. Export does not certify that professional review occurred.\nSource paths inside the original methods document are server references,\nnot files included in this ZIP unless listed in PACKAGE_MANIFEST.json.\n\nThe manifest hashes every other package member; it does not hash itself.\nThe download response supplies a separate checksum for the complete ZIP.\n"""
 
-def _build_review_package(outputs_dir, methods_filename, *, raster_validator=None):
+def _build_review_package(outputs_dir, methods_filename, *, raster_validator=None, raw_run_directory=None):
     require(isinstance(methods_filename, str) and METHODS_RE.fullmatch(methods_filename),
             "invalid_input", "Supply a generated cmap_<8 hex>_vN_methods.json filename, not a path.")
     root = Path(outputs_dir)
@@ -305,17 +305,29 @@ def _build_review_package(outputs_dir, methods_filename, *, raster_validator=Non
         validator = raster_validator or validate_rasters
         ct, fl = validator(stage, names, m, book)
         _check_statistics(stage, names, m, book, ct, fl)
+        polygon_qc = None
+        polygon_members = []
+        scope = "preliminary_raster_review_only"
+        schema = "1"
+        if raw_run_directory is not None:
+            from review_package_polygons import (POLYGON_NAMES, POLYGON_SCOPE,
+                                                 snapshot_raw_patches, validate_raw_patches)
+            used = snapshot_raw_patches(root, stage, raw_run_directory, used)
+            polygon_qc = validate_raw_patches(stage, names, m, raw_run_directory)
+            polygon_members = list(POLYGON_NAMES)
+            scope, schema = POLYGON_SCOPE, "2"
         source_warnings = m.get("warnings", [])
         require(isinstance(source_warnings, list) and len(source_warnings) <= 32 and
                 all(isinstance(w, str) and len(w) <= 500 for w in source_warnings),
                 "invalid_metadata", "Source warnings exceed the bounded response limit.")
         warnings = [
-            "Raster-only package; polygons and GeoPackage are not included.",
+            ("Raw polygons included; full approved-boundary coverage and ArcGIS Pro acceptance are not verified by export."
+             if polygon_qc else "Raster-only package; polygons and GeoPackage are not included."),
             "Automated consistency checks are not independent classification accuracy or professional review.",
             "Cover-scheme approval and source-dictionary lineage were not independently authenticated by export.",
         ] + source_warnings
         qc = {
-            "package_scope": "preliminary_raster_review_only",
+            "package_scope": scope,
             "checks": {"files_present": True, "raster_grid_and_tags_match": True,
                        "forest_land_pixels_match_codebook": True, "csv_and_methods_match_rasters": True,
                        "actual_cell_count_closure": True},
@@ -329,18 +341,32 @@ def _build_review_package(outputs_dir, methods_filename, *, raster_validator=Non
             "unmapped_evt_codes_seen": m.get("unmapped_evt_codes_seen", []),
             "warnings": warnings,
         }
-        (stage/"OPEN_IN_ARCGIS_PRO.md").write_text(GUIDE, encoding="utf-8")
+        if polygon_qc:
+            qc["raw_polygon_validation"] = polygon_qc
+            qc["checks"]["raw_polygons_validated_against_raster"] = True
+            qc["full_approved_boundary_coverage_verified"] = False
+            qc["generalization_status"] = "not_included"
+        guide = GUIDE
+        if polygon_qc:
+            guide = guide.replace("# Preliminary raster review package", "# Preliminary raster and raw-polygon review package")
+            guide = guide.replace(
+                "This is a raster-only review package. No raw or generalized polygons,\nGeoPackage, candidate stands, or physical-accessibility layer is included.",
+                "Raw cover-type polygons are included; no generalized polygons, stands, or accessibility layers are included.")
+            guide += "\n## Raw cover-type polygons\nAdd raw_cover_type_patches.gpkg, layer candidate_cover_type_raw_patches.\nSymbolize output_label; inspect area_acres, forest_land_status, and review_flags.\nReview raw_patch_acreage.csv and raw_patch_qc.json. Flags are class-level, not measured patch evidence.\nRaw stair-step edges are intentional. NoData remains holes/gaps. These polygons are not stands.\nThe raster methods sentinel describes the earlier raster stage; raw_patch_qc.json records the later polygon stage.\nSource server paths in raw QC are provenance references, not portable file locations.\nThis export does not establish full-boundary coverage. Review the actual run extent before use.\n"
+        (stage/"OPEN_IN_ARCGIS_PRO.md").write_text(guide, encoding="utf-8")
         (stage/"QC_AND_LIMITATIONS.json").write_text(json.dumps(qc, indent=2, allow_nan=False), encoding="utf-8")
-        members = sorted(list(names.values()) + ["OPEN_IN_ARCGIS_PRO.md", "QC_AND_LIMITATIONS.json"])
+        members = sorted(list(names.values()) + polygon_members + ["OPEN_IN_ARCGIS_PRO.md", "QC_AND_LIMITATIONS.json"])
         manifest = {
-            "schema_version": "1", "package_id": package_id, "created_at_utc": utc_now(),
-            "package_scope": "preliminary_raster_review_only", "job_id": m["job_id"],
+            "schema_version": schema, "package_id": package_id, "created_at_utc": utc_now(),
+            "package_scope": scope, "job_id": m["job_id"],
             "crosswalk_id": m["crosswalk_id"], "crosswalk_version": m["crosswalk_version"],
             "cover_scheme_id": m["cover_scheme_id"], "cover_scheme_version": m.get("cover_scheme_version"),
             "source_methods_filename": methods_filename,
             "files": [{"name": n, "bytes": (stage/n).stat().st_size, "sha256": sha256_file(stage/n)} for n in members],
             "manifest_self_hash_excluded": True,
         }
+        if polygon_qc:
+            manifest["raw_polygon_validation"] = polygon_qc
         (stage/"PACKAGE_MANIFEST.json").write_text(json.dumps(manifest, indent=2, allow_nan=False), encoding="utf-8")
         members.append("PACKAGE_MANIFEST.json")
         archive = stage / "mapcp_raster_review.zip"
@@ -354,7 +380,7 @@ def _build_review_package(outputs_dir, methods_filename, *, raster_validator=Non
                 require(hashlib.sha256(z.read(item["name"])).hexdigest() == item["sha256"], "archive_failed", "ZIP content checksum failed.")
         return {"status": "package_created", "package_id": package_id, "archive_path": str(archive),
                 "package_bytes": archive.stat().st_size, "package_sha256": sha256_file(archive),
-                "package_scope": manifest["package_scope"], "job_id": m["job_id"],
+                "package_scope": manifest["package_scope"], "schema_version": schema, "job_id": m["job_id"],
                 "crosswalk_version": m["crosswalk_version"], "files": members, "warnings": warnings,
                 "classification_rerun": False, "storage_uploaded": False}
     except Exception:
@@ -362,9 +388,9 @@ def _build_review_package(outputs_dir, methods_filename, *, raster_validator=Non
         raise
 
 
-def build_review_package(outputs_dir, methods_filename, *, raster_validator=None):
+def build_review_package(outputs_dir, methods_filename, *, raster_validator=None, raw_run_directory=None):
     require(_BUILD_LOCK.acquire(blocking=False), "export_busy", "Another package build is running; no second build was started.")
     try:
-        return _build_review_package(outputs_dir, methods_filename, raster_validator=raster_validator)
+        return _build_review_package(outputs_dir, methods_filename, raster_validator=raster_validator, raw_run_directory=raw_run_directory)
     finally:
         _BUILD_LOCK.release()

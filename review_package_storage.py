@@ -133,17 +133,37 @@ def _put(client, config, key, body, content_type, checksum):
     except Exception:
         raise ExportError("storage_upload_failed", "COS upload failed or its outcome is unknown; export was not automatically retried.") from None
 
+def _descriptor_contract(descriptor):
+    schema, scope = descriptor.get("schema_version"), descriptor.get("package_scope")
+    legacy = schema == "1" and scope == "preliminary_raster_review_only"
+    polygons = schema == "2" and scope == "preliminary_raster_and_raw_polygon_review"
+    require(legacy or polygons, "storage_integrity_failed", "Unsupported stored package schema or scope.")
+    files = descriptor.get("files")
+    count = 12 if polygons else 9
+    require(isinstance(files, list) and len(files) == count and
+            all(isinstance(n, str) and re.fullmatch(r"[A-Za-z0-9_.-]+", n) for n in files) and
+            len(set(files)) == count,
+            "storage_integrity_failed", "Stored package file list is invalid.")
+    if polygons:
+        from review_package import METHODS_RE, SUFFIXES
+        methods = [n for n in files if METHODS_RE.fullmatch(n)]
+        require(len(methods) == 1, "storage_integrity_failed", "Polygon package methods identity is missing.")
+        prefix = methods[0].removesuffix("_methods.json")
+        expected = {prefix + "_" + suffix for suffix in SUFFIXES.values()} | {
+            "OPEN_IN_ARCGIS_PRO.md", "QC_AND_LIMITATIONS.json", "PACKAGE_MANIFEST.json",
+            "raw_cover_type_patches.gpkg", "raw_patch_acreage.csv", "raw_patch_qc.json"}
+        require(set(files) == expected, "storage_integrity_failed", "Polygon package member contract is invalid.")
+    return scope
+
+
 def _link(client, config, descriptor, *, verify_contents=False):
     package_id = _package_id(descriptor.get("package_id"))
     checksum, size = descriptor.get("package_sha256"), descriptor.get("package_bytes")
     require(isinstance(checksum, str) and re.fullmatch(r"[0-9a-f]{64}", checksum) and
             type(size) is int and 0 < size <= MAX_BYTES,
             "storage_integrity_failed", "Stored package descriptor is invalid.")
-    files = descriptor.get("files")
-    require(isinstance(files, list) and len(files) == 9 and
-            all(isinstance(n, str) and re.fullmatch(r"[A-Za-z0-9_.-]+", n) for n in files) and
-            len(set(files)) == 9,
-            "storage_integrity_failed", "Stored package file list is invalid.")
+    scope = _descriptor_contract(descriptor)
+    files = descriptor["files"]
     key = _key(config, package_id, "mapcp_raster_review.zip")
     if verify_contents:
         _verify_zip(client, config, key, size, checksum)
@@ -168,18 +188,23 @@ def _link(client, config, descriptor, *, verify_contents=False):
             all(isinstance(w, str) and len(w) <= 500 for w in warnings),
             "storage_integrity_failed", "Stored warning metadata is invalid.")
     return {"status": "download_ready", "package_id": package_id,
-            "package_scope": "preliminary_raster_review_only", "package_bytes": size,
+            "package_scope": scope, "package_bytes": size,
             "package_sha256": checksum, "files": files, "download_url": url,
             "download_url_expires_at_utc": (now+timedelta(seconds=LINK_SECONDS)).isoformat(),
             "download_url_lifetime_seconds": LINK_SECONDS,
             "classification_rerun": False, "storage_uploaded": True,
             "workstation_delivery_verified": False,
             "warnings": ["Anyone holding this temporary link can download the package until it expires.",
-                         "This is a raster-only package, not the complete polygon/GeoPackage deliverable.",
+                         ("Raw polygons included; full-boundary coverage and ArcGIS Pro acceptance remain unverified."
+                          if scope == "preliminary_raster_and_raw_polygon_review" else
+                          "This is a raster-only package, not the complete polygon/GeoPackage deliverable."),
                          "Export does not verify professional review or independent classification accuracy."] + warnings}
 
 def store_package(client, config, package):
     package_id = _package_id(package["package_id"])
+    _descriptor_contract({"schema_version": package.get("schema_version", "1"),
+                          "package_scope": package.get("package_scope", "preliminary_raster_review_only"),
+                          "files": package.get("files")})
     archive = Path(package["archive_path"])
     require(archive.stat().st_size == package["package_bytes"] <= MAX_BYTES,
             "package_changed", "Local archive size changed before upload.")
@@ -188,8 +213,9 @@ def store_package(client, config, package):
         _put(client, config, key, body, "application/zip", package["package_sha256"])
     _verify_zip(client, config, key, package["package_bytes"], package["package_sha256"])
     descriptor = {k: package[k] for k in ("package_id", "package_bytes", "package_sha256", "files", "job_id", "crosswalk_version", "warnings")}
-    descriptor["schema_version"] = "1"
-    descriptor["package_scope"] = "preliminary_raster_review_only"
+    descriptor["schema_version"] = package.get("schema_version", "1")
+    descriptor["package_scope"] = package.get("package_scope", "preliminary_raster_review_only")
+    _descriptor_contract(descriptor)
     raw = json.dumps(descriptor, allow_nan=False).encode("utf-8")
     require(len(raw) <= DESCRIPTOR_MAX, "size_limit", "Package descriptor exceeds its size limit.")
     desc_key = _key(config, package_id, "package_record.json")
@@ -202,9 +228,9 @@ def renew_package(client, config, package_id):
     package_id = _package_id(package_id)
     raw = _get_bounded(client, config, _key(config, package_id, "package_record.json"), DESCRIPTOR_MAX)
     descriptor = read_json_bytes(raw)
-    require(descriptor.get("package_id") == package_id and descriptor.get("schema_version") == "1" and
-            descriptor.get("package_scope") == "preliminary_raster_review_only",
+    require(descriptor.get("package_id") == package_id,
             "storage_integrity_failed", "Stored package identity is invalid.")
+    _descriptor_contract(descriptor)
     result = _link(client, config, descriptor, verify_contents=True)
     result["storage_uploaded"] = False
     result["link_renewed"] = True
@@ -219,15 +245,20 @@ def deliver_review_package(outputs_dir, request, *, env=None, client_factory=Non
     stage = "validate_request"
     package_id = None
     try:
-        require(isinstance(request, dict) and set(request) <= {"action", "methods_filename", "package_id"},
+        require(isinstance(request, dict) and set(request) <= {"action", "methods_filename", "package_id", "raw_run_directory"},
                 "invalid_input", "Unsupported export inputs.")
         action = request.get("action")
         methods, existing = request.get("methods_filename"), request.get("package_id")
+        raw_run = request.get("raw_run_directory")
         require(action in {"create", "renew"}, "invalid_input", "Action must be create or renew.")
         if action == "create":
-            require(type(methods) is str and existing is None, "invalid_input", "Create requires only a methods filename.")
+            require(type(methods) is str and existing is None, "invalid_input", "Create requires a methods filename, optional raw-run name, and no package ID.")
+            if raw_run is not None:
+                from review_package_polygons import RAW_RUN_RE
+                require(type(raw_run) is str and RAW_RUN_RE.fullmatch(raw_run),
+                        "invalid_input", "Raw-run reference must be a generated folder name, never a path.")
         else:
-            require(methods is None, "invalid_input", "Renew accepts only an existing package ID.")
+            require(methods is None and raw_run is None, "invalid_input", "Renew accepts only an existing package ID.")
             _package_id(existing)
         stage = "configure_storage"
         config = StorageConfig.from_environment(env)
@@ -236,7 +267,9 @@ def deliver_review_package(outputs_dir, request, *, env=None, client_factory=Non
             stage = "renew_link"
             return renew_package(client, config, existing)
         stage = "validate_and_package"
-        package = (builder or build_review_package)(outputs_dir, methods)
+        build = builder or build_review_package
+        package = (build(outputs_dir, methods, raw_run_directory=raw_run)
+                   if raw_run is not None else build(outputs_dir, methods))
         package_id = package["package_id"]
         stage = "upload_verify_and_link"
         return store_package(client, config, package)

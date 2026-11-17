@@ -207,15 +207,19 @@ or compatible legacy artifacts, not as a substitute for a boundary-wide request.
    preserved and forest-land status is unknown. Do not turn unknown into nonforest.
    A proposal must satisfy the current schema and be reviewed; do not invent
    forestry policy or silently choose a pilot configuration.
-5. Configuration saving remains a local operator handoff. The existing
-   crosswalk_configuration_save.py CLI is terminal-only and must not be exposed
-   through MCP or replaced with model-authored approval records.
-   Retain exact source/proposal/review digests and the reviewed request.
-   Explain the handoff; do not claim the agent saved anything.
-6. Resume with the actual saved configuration filename supplied by the operator.
-   The acquisition, configuration, and matching approval record must exist in
-   the backend runtime that performs mapping. VM and container filesystems are
-   separate unless a transfer/persistence arrangement has been verified.
+5. With permission to write a pending review, use the connected
+   request_candidate_configuration_review tool with the exact reviewed proposal.
+   Present its actual review URL and review ID. The operator reviews decisions,
+   unknowns, acreage, and limitations and authenticates separately in the browser.
+   No manual file upload is required. Never request or handle the operator password
+   in chat. Opening a URL or saying yes in chat is not backend approval.
+6. Use check_candidate_configuration_review with the exact returned review ID.
+   Only an approved status with validated saved evidence permits continuing.
+   Carry its actual crosswalk_filename (also returned as configuration_id) and
+   matching acquisition into mapping. Reject/pending/expired/failed states block
+   mapping. A crosswalk is mandatory, project-specific, and never silently defaulted.
+   Approval saves the configuration only; do not infer approval to execute mapping.
+   If this hosted capability is unavailable, report the blocker honestly.
 7. Use preview_boundary_candidate_mapping with explicit crosswalk selection.
    Review its acreage, unknown/NoData accounting, patch counts, limits, and errors.
    Use create_boundary_candidate_mapping only with the exact matching preview,

@@ -7148,5 +7148,10 @@ def create_boundary_candidate_mapping(
     )
 
 
+from configuration_browser_mcp import register_configuration_browser_tools
+
+register_configuration_browser_tools(mcp, OUTPUT_FOLDER, _PROJECT_DATA_DIR)
+
+
 if __name__ == "__main__":
     mcp.run(transport="stdio")

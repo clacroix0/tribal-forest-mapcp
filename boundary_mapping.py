@@ -504,10 +504,10 @@ if __name__ == "__main__":
     root = Path(__file__).resolve().parent / "outputs"
     parser = argparse.ArgumentParser(description="Boundary-clipped candidate mapping. 'preview' is a dry run that writes no rasters.")
     sub = parser.add_subparsers(dest="command", required=True)
-    p = sub.add_parser("preview"); p.add_argument("acquisition_directory"); p.add_argument("--crosswalk", default="mescalero_v1_evt_crosswalk_v2.json")
+    p = sub.add_parser("preview"); p.add_argument("acquisition_directory"); p.add_argument("--crosswalk", required=True)
     p.add_argument("--threshold-m2", type=float, default=10_000.0)
     p = sub.add_parser("create"); p.add_argument("acquisition_directory"); p.add_argument("preview_directory")
-    p.add_argument("--crosswalk", default="mescalero_v1_evt_crosswalk_v2.json"); p.add_argument("--confirm", action="store_true")
+    p.add_argument("--crosswalk", required=True); p.add_argument("--confirm", action="store_true")
     args = parser.parse_args()
     if args.command == "preview":
         result = preview_boundary_mapping(root, MappingRequest(acquisition_directory=args.acquisition_directory, crosswalk_filename=args.crosswalk,

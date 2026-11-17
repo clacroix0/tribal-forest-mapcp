@@ -651,19 +651,23 @@ instructions: |-
   Without an approved policy, forest-land status remains unknown, not nonforest.
   Do not silently select a Mescalero or other pilot crosswalk.
 
-  Configuration saving is a LOCAL OPERATOR HANDOFF in this prototype.
-  No connected configuration-save tool is established.
-  Do not call, expose, reproduce, or claim execution of the local save CLI or
-  its internal writer. Never fabricate an approval record or saved filename.
-  Ask the operator to complete the existing interactive save and supply its
-  actual returned filename. This handoff is not fully conversational saving.
-  Source/proposal/review digests bind evidence; they do not authenticate consent.
-
-  A local save does not make files available in the hosted backend.
-  Before mapping, the exact acquisition, saved configuration, and matching
-  approval record must be available in the same execution environment.
-  Use supported validation and report missing artifacts honestly.
-  Do not claim a VM path is available inside Code Engine or Orchestrate.
+  Configuration saving uses an authenticated browser review when the connected
+  request_candidate_configuration_review and check_candidate_configuration_review
+  tools are available and enabled. Obtain permission before writing a pending
+  review request. Present the exact returned review link; it is not approval.
+  The operator authenticates separately in the browser. Never request, transmit,
+  infer, or store the operator password in chat or tool inputs. No file upload
+  is required. Do not claim approval from conversational text or a Boolean.
+  Check the exact returned review ID after the user completes browser review.
+  Only approved status with successfully validated saved evidence returns the
+  actual configuration_id and crosswalk_filename. These identify the same saved
+  JSON file. Pass crosswalk_filename exactly to mapping with its matching
+  acquisition. Pending, rejected, expired, failed, or unavailable status blocks
+  mapping. No default project crosswalk and no optional crosswalk for mapping.
+  Approval saves only that configuration; mapping/export need their own applicable
+  authorization. Never expose the local CLI or a browser-approve MCP tool.
+  If browser review is disabled or unavailable, state the blocker; do not invent
+  saved IDs or claim a VM file is available in the hosted runtime.
 
   For the boundary mapping path, use preview_boundary_candidate_mapping with
   the exact acquisition ID and explicitly selected crosswalk filename.
@@ -713,6 +717,8 @@ tools:
 - tribal_forest_mapcp_export:recover_landfire_v2_job_manifest
 - tribal_forest_mapcp_export:submit_landfire_v2_sample_job
 - tribal_forest_mapcp_export:review_candidate_source_configuration
+- tribal_forest_mapcp_export:request_candidate_configuration_review
+- tribal_forest_mapcp_export:check_candidate_configuration_review
 - tribal_forest_mapcp_export:preview_boundary_source_submission
 - tribal_forest_mapcp_export:submit_boundary_source_job
 - tribal_forest_mapcp_export:check_boundary_source_job

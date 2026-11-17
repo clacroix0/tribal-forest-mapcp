@@ -206,9 +206,15 @@ def validate_run_binding(project_data_root, acquisition_directory,
     path = (directory / name).resolve()
     _require(path.parent == directory, "Approval record escapes its directory.")
     record = _read(path)
+    browser_approved = record.get("schema") == "mapcp_browser_configuration_approval_v1"
+    if browser_approved:
+        from configuration_browser import validate_browser_approval
+        validate_browser_approval(project_data_root, crosswalk, record)
     _require(
-        record.get("schema") == "mapcp_local_configuration_approval_v1"
-        and record.get("operator_confirmation_recorded") is True,
+        browser_approved or (
+            record.get("schema") == "mapcp_local_configuration_approval_v1"
+            and record.get("operator_confirmation_recorded") is True
+        ),
         "Missing local operator confirmation record.",
     )
     _require(_digest(record) == crosswalk.get("approval_record_sha256"),

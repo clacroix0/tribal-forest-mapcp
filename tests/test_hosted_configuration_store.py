@@ -360,14 +360,14 @@ def test_receipt_expires_during_revalidation_real_documents_no_write(
     real_document_store, monkeypatch
 ):
     kwargs, result = real_document_store
-    clock = {
-        "now": datetime(2030, 1, 1, tzinfo=timezone.utc),
-    }
-
-    class SyntheticClock:
+    class SyntheticClock(datetime):
         @classmethod
         def now(cls, tz=None):
             return clock["now"]
+
+    clock = {
+        "now": SyntheticClock(2030, 1, 1, tzinfo=timezone.utc),
+    }
 
     class ExpiringDuringReviewVerifier:
         def verify(self, action):

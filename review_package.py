@@ -502,6 +502,13 @@ def _build_review_package(outputs_dir, methods_filename, *, raster_validator=Non
             polygon_qc = validate_raw_patches(stage, names, m, raw_run_directory)
             polygon_members = list(POLYGON_NAMES)
             scope, schema = POLYGON_SCOPE, "2"
+        from review_package_context import add_context, CONTEXT_SCOPE
+        context_members, context_qc, context_guide, used = add_context(
+            root, stage, m, names, book, ct, used,
+            raw_run_directory is not None
+        )
+        if context_qc["included"]:
+            scope, schema = CONTEXT_SCOPE, "3"
         source_warnings = m.get("warnings", [])
         require(isinstance(source_warnings, list) and len(source_warnings) <= 32 and
                 all(isinstance(w, str) and len(w) <= 500 for w in source_warnings),
@@ -536,6 +543,7 @@ def _build_review_package(outputs_dir, methods_filename, *, raster_validator=Non
             qc["checks"]["raw_polygons_validated_against_raster"] = True
             qc["full_approved_boundary_coverage_verified"] = False
             qc["generalization_status"] = "not_included"
+        qc["review_context"] = context_qc
         guide = GUIDE
         if polygon_qc:
             guide = guide.replace("# Preliminary raster review package", "# Preliminary raster and raw-polygon review package")
@@ -543,9 +551,12 @@ def _build_review_package(outputs_dir, methods_filename, *, raster_validator=Non
                 "This is a raster-only review package. No raw or generalized polygons,\nGeoPackage, candidate stands, or physical-accessibility layer is included.",
                 "Raw cover-type polygons are included; no generalized polygons, stands, or accessibility layers are included.")
             guide += "\n## Raw cover-type polygons\nAdd raw_cover_type_patches.gpkg, layer candidate_cover_type_raw_patches.\nSymbolize output_label; inspect area_acres, forest_land_status, and review_flags.\nReview raw_patch_acreage.csv and raw_patch_qc.json. Flags are class-level, not measured patch evidence.\nRaw stair-step edges are intentional. NoData remains holes/gaps. These polygons are not stands.\nThe raster methods sentinel describes the earlier raster stage; raw_patch_qc.json records the later polygon stage.\nSource server paths in raw QC are provenance references, not portable file locations.\nThis export does not establish full-boundary coverage. Review the actual run extent before use.\n"
+        guide += context_guide
+        if not context_qc["included"]:
+            guide += "\nBoundary and static preview are not included; this is a legacy/intermediate review package.\n"
         (stage/"OPEN_IN_ARCGIS_PRO.md").write_text(guide, encoding="utf-8")
         (stage/"QC_AND_LIMITATIONS.json").write_text(json.dumps(qc, indent=2, allow_nan=False), encoding="utf-8")
-        members = sorted(list(names.values()) + polygon_members + ["OPEN_IN_ARCGIS_PRO.md", "QC_AND_LIMITATIONS.json"])
+        members = sorted(list(names.values()) + polygon_members + context_members + ["OPEN_IN_ARCGIS_PRO.md", "QC_AND_LIMITATIONS.json"])
         manifest = {
             "schema_version": schema, "package_id": package_id, "created_at_utc": utc_now(),
             "package_scope": scope, "job_id": m["job_id"],

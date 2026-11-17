@@ -137,22 +137,71 @@ def _descriptor_contract(descriptor):
     schema, scope = descriptor.get("schema_version"), descriptor.get("package_scope")
     legacy = schema == "1" and scope == "preliminary_raster_review_only"
     polygons = schema == "2" and scope == "preliminary_raster_and_raw_polygon_review"
-    require(legacy or polygons, "storage_integrity_failed", "Unsupported stored package schema or scope.")
+    context = (
+        schema == "3"
+        and scope == "preliminary_raster_and_raw_polygon_context_review"
+    )
+    require(
+        legacy or polygons or context,
+        "storage_integrity_failed",
+        "Unsupported stored package schema or scope."
+    )
     files = descriptor.get("files")
-    count = 12 if polygons else 9
-    require(isinstance(files, list) and len(files) == count and
-            all(isinstance(n, str) and re.fullmatch(r"[A-Za-z0-9_.-]+", n) for n in files) and
-            len(set(files)) == count,
-            "storage_integrity_failed", "Stored package file list is invalid.")
-    if polygons:
+    count = 15 if context else (12 if polygons else 9)
+    require(
+        isinstance(files, list) and len(files) == count
+        and all(
+            isinstance(n, str)
+            and re.fullmatch(r"[A-Za-z0-9_.-]+", n)
+            for n in files
+        )
+        and len(set(files)) == count,
+        "storage_integrity_failed",
+        "Stored package file list is invalid."
+    )
+    if polygons or context:
         from review_package import METHODS_RE, SUFFIXES
         methods = [n for n in files if METHODS_RE.fullmatch(n)]
-        require(len(methods) == 1, "storage_integrity_failed", "Polygon package methods identity is missing.")
+        require(
+            len(methods) == 1,
+            "storage_integrity_failed",
+            "Polygon package methods identity is missing."
+        )
         prefix = methods[0].removesuffix("_methods.json")
-        expected = {prefix + "_" + suffix for suffix in SUFFIXES.values()} | {
-            "OPEN_IN_ARCGIS_PRO.md", "QC_AND_LIMITATIONS.json", "PACKAGE_MANIFEST.json",
-            "raw_cover_type_patches.gpkg", "raw_patch_acreage.csv", "raw_patch_qc.json"}
-        require(set(files) == expected, "storage_integrity_failed", "Polygon package member contract is invalid.")
+        expected = {
+            prefix + "_" + suffix for suffix in SUFFIXES.values()
+        } | {
+            "OPEN_IN_ARCGIS_PRO.md",
+            "QC_AND_LIMITATIONS.json",
+            "PACKAGE_MANIFEST.json",
+            "raw_cover_type_patches.gpkg",
+            "raw_patch_acreage.csv",
+            "raw_patch_qc.json",
+        }
+        if context:
+            boundaries = [
+                n for n in files
+                if n in {
+                    prefix + "_boundary.geojson",
+                    prefix + "_boundary.json",
+                    prefix + "_boundary.gpkg",
+                }
+            ]
+            require(
+                len(boundaries) == 1,
+                "storage_integrity_failed",
+                "Context package must contain exactly one run-bound boundary."
+            )
+            expected |= {
+                boundaries[0],
+                prefix + "_preview.png",
+                prefix + "_preview_legend.csv",
+            }
+        require(
+            set(files) == expected,
+            "storage_integrity_failed",
+            "Polygon package member contract is invalid."
+        )
     return scope
 
 
@@ -196,7 +245,7 @@ def _link(client, config, descriptor, *, verify_contents=False):
             "workstation_delivery_verified": False,
             "warnings": ["Anyone holding this temporary link can download the package until it expires.",
                          ("Raw polygons included; full-boundary coverage and ArcGIS Pro acceptance remain unverified."
-                          if scope == "preliminary_raster_and_raw_polygon_review" else
+                          if scope in {"preliminary_raster_and_raw_polygon_review", "preliminary_raster_and_raw_polygon_context_review"} else
                           "This is a raster-only package, not the complete polygon/GeoPackage deliverable."),
                          "Export does not verify professional review or independent classification accuracy."] + warnings}
 

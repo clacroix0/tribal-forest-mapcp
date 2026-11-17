@@ -1,0 +1,38 @@
+{
+  "source_url": "https://www.landfire.gov/sites/default/files/CSV/LF2025/LF2025_EVT.csv",
+  "retrieval_started_at_utc": "2026-11-16T23:37:42.628442+00:00",
+  "retrieval_completed_at_utc": "2026-11-16T23:37:48.089973+00:00",
+  "bytes": 309948,
+  "sha256": "5ccc130b250dbe709340afb2cc02ecdb3c4c374e2dba19cec91e2c2713e4963d",
+  "response_headers": {
+    "content-type": "text/csv",
+    "content-length": "309948",
+    "last-modified": "Wed, 22 Apr 2026 13:15:43 GMT",
+    "etag": "\"4babc-6500c543fe52f\""
+  },
+  "csv_headers": [
+    "VALUE",
+    "EVT_NAME",
+    "LFRDB",
+    "EVT_FUEL",
+    "EVT_FUEL_N",
+    "EVT_LF",
+    "EVT_PHYS",
+    "EVT_GP",
+    "EVT_GP_N",
+    "SAF_SRM",
+    "EVT_ORDER",
+    "EVT_CLASS",
+    "EVT_SBCLS",
+    "R",
+    "G",
+    "B",
+    "RED",
+    "GREEN",
+    "BLUE"
+  ],
+  "data_rows": 1069,
+  "status": "downloaded_requires_source_review",
+  "product_version_independently_verified": false,
+  "approved_for_classification": false
+}

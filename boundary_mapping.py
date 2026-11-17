@@ -29,7 +29,7 @@ CROSSWALK_REQUIRED = {"crosswalk_id", "crosswalk_version", "cover_scheme_id", "c
 class MappingRequest(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
     acquisition_directory: str = Field(pattern=r"^bacq_[A-Za-z0-9_-]+$", max_length=120)
-    crosswalk_filename: str = Field(default="mescalero_v1_evt_crosswalk_v2.json", pattern=r"^[A-Za-z0-9_-]+\.json$", max_length=120)
+    crosswalk_filename: str = Field(..., pattern=r"^[A-Za-z0-9_-]+\.json$", max_length=120)
     small_patch_threshold_m2: float = Field(default=10_000.0, gt=0, le=1e9, allow_inf_nan=False)
 
 
@@ -37,7 +37,7 @@ class CreateMappingRequest(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
     acquisition_directory: str = Field(pattern=r"^bacq_[A-Za-z0-9_-]+$", max_length=120)
     preview_directory: str = Field(pattern=r"^mapdry_[A-Za-z0-9_-]+$", max_length=120)
-    crosswalk_filename: str = Field(default="mescalero_v1_evt_crosswalk_v2.json", pattern=r"^[A-Za-z0-9_-]+\.json$", max_length=120)
+    crosswalk_filename: str = Field(..., pattern=r"^[A-Za-z0-9_-]+\.json$", max_length=120)
 
 
 class MappingResult(BaseModel):
@@ -98,7 +98,9 @@ def _fail(stage: str, exc: Exception | str) -> MappingResult:
 
 # --- crosswalk ---------------------------------------------------------------------------------
 def load_crosswalk(project_data_root: Path, name: str) -> tuple[dict, str]:
-    root = (Path(project_data_root) / "crosswalks").resolve()
+    root = (Path(project_data_root) / (
+        "run_crosswalks" if name.startswith("runbound_") else "crosswalks"
+    )).resolve()
     path = (root / name).resolve()
     if path.parent != root or not path.is_file() or path.stat().st_size > MAX_JSON_BYTES:
         raise MappingError("Crosswalk must be a direct file in project_data/crosswalks (max 5 MB).")
@@ -327,6 +329,14 @@ def _analyze(root: Path, project_data_root: Path, acquisition_directory: str, cr
     started = time.perf_counter()
     directory, collection, tif, boundary = _load_collection(root, acquisition_directory)
     crosswalk, crosswalk_hash = load_crosswalk(project_data_root, crosswalk_filename)
+    if crosswalk_filename.startswith("runbound_"):
+        from crosswalk_configuration_save import validate_run_binding
+        validate_run_binding(
+            project_data_root, acquisition_directory, collection, crosswalk
+        )
+    elif "run_binding" in crosswalk:
+        raise MappingError("Run-bound configuration must use its runbound_ filename.")
+
     evt, inside, info = _read_inputs(tif, boundary)
     result = classify_and_clip(evt, inside, crosswalk)
     cell_area = info["cell_area_m2"]

@@ -45,7 +45,7 @@ Use only tools actually attached to the current agent, with their current schema
 The names below are source-code names, not proof of current Orchestrate tool bindings.
 Resolve any namespaced registration unambiguously by description and schema. If a
 required tool is absent, explain the missing capability instead of inventing a call.
-Do not claim that the intended seven-tool project architecture is already deployed.
+Do not assume a fixed tool count or claim that source-code registrations are deployed.
 
 Source-code workflow roles:
 
@@ -183,13 +183,66 @@ a full output inventory, or a checklist for unrelated later stages.
    actual check or the user's explicit report. Do not claim field validation or
    mapping accuracy from successful software execution.
 
-## Full-boundary requests
+## Full-boundary and source-configuration workflow
 
-The inspected prepare_full_boundary_mapping_request tool performs preflight and
-writes a review request; it does not execute full-boundary mapping. Its prepared
-request is not accepted by the existing sample submitter. Do not route it into that
-submitter, tile or expand the sample workflow without implemented support, or imply
-that the full reservation was mapped. State the blocker and the supported next step.
+<!-- UPDATED BOUNDARY AND SOURCE-CONFIGURATION WORKFLOW -->
+
+Use the current tool schemas and actual session availability.
+The older sample procedure above applies only to explicitly requested samples
+or compatible legacy artifacts, not as a substitute for a boundary-wide request.
+
+1. Resolve the analysis objective and explicitly approved boundary. Use boundary
+   inspection and preparation tools where available. Preparation is not execution.
+2. For new boundary acquisition, use preview_boundary_source_submission.
+   Only after the exact request is reviewed and all required authorization
+   controls are satisfied may submit_boundary_source_job be invoked.
+   Use check_boundary_source_job and collect_boundary_source_result with the
+   exact returned IDs/reports and their documented authorization requirements.
+   Never resubmit a job merely because it is pending or its outcome is uncertain.
+3. Reuse a suitable existing boundary acquisition instead of reacquiring data.
+   Call review_candidate_source_configuration with its exact acquisition ID
+   when available. It returns a draft, not approval or a saved configuration.
+4. Explain the actual source labels and acreage, proposed classes, forest-land
+   values, and unresolved decisions. Without a proposal, source identities are
+   preserved and forest-land status is unknown. Do not turn unknown into nonforest.
+   A proposal must satisfy the current schema and be reviewed; do not invent
+   forestry policy or silently choose a pilot configuration.
+5. With permission to write a pending review, use the connected
+   request_candidate_configuration_review tool with the exact reviewed proposal.
+   Present its actual review URL and review ID. The operator reviews decisions,
+   unknowns, acreage, and limitations and authenticates separately in the browser.
+   No manual file upload is required. Never request or handle the operator password
+   in chat. Opening a URL or saying yes in chat is not backend approval.
+6. Use check_candidate_configuration_review with the exact returned review ID.
+   Only an approved status with validated saved evidence permits continuing.
+   Carry its actual crosswalk_filename (also returned as configuration_id) and
+   matching acquisition into mapping. Reject/pending/expired/failed states block
+   mapping. A crosswalk is mandatory, project-specific, and never silently defaulted.
+   Approval saves the configuration only; do not infer approval to execute mapping.
+   If this hosted capability is unavailable, report the blocker honestly.
+7. Use preview_boundary_candidate_mapping with explicit crosswalk selection.
+   Review its acreage, unknown/NoData accounting, patch counts, limits, and errors.
+   Use create_boundary_candidate_mapping only with the exact matching preview,
+   acquisition, crosswalk, and required authorization.
+8. Review the resulting rasters, then create required raw patches with the actual
+   returned methods filename. Generalization remains optional and separately
+   approved; no generalization is required for the core delivery.
+9. Export using supported exact artifact references. Inspect actual returned scope
+   and members. New-format packages can include the boundary and a quick-look PNG
+   with separate legend; neither proves complete approved-boundary coverage.
+   Preserve separate states for local build, upload, retrieval, and ArcGIS review.
+
+The presence of these functions in source does not establish live registration,
+deployed-code parity, verified service behavior, or completed full-boundary mapping.
+Do not route a boundary-preparation record through the legacy sample submitter.
+Do not require full-boundary NAIP imagery: it remains optional visual context
+unless another analytical method is separately approved.
+
+Preserve current host/server approval requirements. Do not treat a request token,
+model-supplied phrase, or instruction-only skill as an enforced approval control.
+If a required control is unavailable, stop that consequential operation.
+For a non-executing workflow test, explain intended steps and gaps without
+calling processing, acquisition, saving, export, or renewal tools.
 
 ## Errors, evidence, and final response
 

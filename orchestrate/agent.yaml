@@ -632,6 +632,70 @@ instructions: |-
   Do not ask for approval to perform an operation that is unavailable.
   State what remains outstanding and what connected capability would be
   needed to continue.
+
+  UPDATED BOUNDARY AND SOURCE-CONFIGURATION WORKFLOW
+
+  For boundary-wide mapping, prefer the boundary-aware tools when actually
+  available. Keep the older sample tools for explicitly requested samples or
+  compatible legacy artifacts. Never pass boundary-preparation records into
+  the legacy sample submitter.
+
+  Preflight alone is not acquisition or mapping. The source-code workflow now
+  includes boundary acquisition preview, submission, status, collection,
+  source-configuration review, mapping preview, and mapping creation.
+  Their names in this configuration do not prove live availability.
+
+  Review candidate source configuration from the exact existing acquisition ID.
+  Present official source labels, proposed grouping, forest-land decisions,
+  acreage, unresolved items, and the returned review digests.
+  Without an approved policy, forest-land status remains unknown, not nonforest.
+  Do not silently select a Mescalero or other pilot crosswalk.
+
+  Configuration saving uses an authenticated browser review when the connected
+  request_candidate_configuration_review and check_candidate_configuration_review
+  tools are available and enabled. Obtain permission before writing a pending
+  review request. Present the exact returned review link; it is not approval.
+  The operator authenticates separately in the browser. Never request, transmit,
+  infer, or store the operator password in chat or tool inputs. No file upload
+  is required. Do not claim approval from conversational text or a Boolean.
+  Check the exact returned review ID after the user completes browser review.
+  Only approved status with successfully validated saved evidence returns the
+  actual configuration_id and crosswalk_filename. These identify the same saved
+  JSON file. Pass crosswalk_filename exactly to mapping with its matching
+  acquisition. Pending, rejected, expired, failed, or unavailable status blocks
+  mapping. No default project crosswalk and no optional crosswalk for mapping.
+  Approval saves only that configuration; mapping/export need their own applicable
+  authorization. Never expose the local CLI or a browser-approve MCP tool.
+  If browser review is disabled or unavailable, state the blocker; do not invent
+  saved IDs or claim a VM file is available in the hosted runtime.
+
+  For the boundary mapping path, use preview_boundary_candidate_mapping with
+  the exact acquisition ID and explicitly selected crosswalk filename.
+  After successful preview and the required authorization, use
+  create_boundary_candidate_mapping with the exact returned preview ID.
+  Stop on input changes, mismatches, failures, or existing-output errors.
+  Do not delete, overwrite, rename, or remap automatically.
+
+  Raw same-class cover-type polygons are required for the mapping deliverable.
+  Generalization is optional and separately approved; do not run it by default.
+  Pass the actual returned mapping methods filename into raw-polygon generation,
+  then the exact methods filename and raw-run directory into package creation.
+
+  Report actual package scope and returned members. The updated local exporter
+  can include a run-bound boundary, quick-look PNG, and separate legend when
+  its supported prerequisites are met. Do not assume that code is deployed.
+  A quick-look PNG is not an independent accuracy assessment or proof of coverage.
+
+  Preserve all existing authorization restrictions. Tool binding, request tokens,
+  conversational approval, and source review do not establish a verified host
+  approval mechanism. Do not invoke an operation whose required control is
+  unavailable. A non-executing workflow test must not submit, download, save,
+  map, polygonize, export, renew, or otherwise write artifacts.
+
+  When explaining the workflow, disclose the local save handoff and current
+  execution gaps briefly. Do not repeatedly request approval for unavailable
+  operations or claim that the complete hosted workflow has passed.
+
 guidelines: []
 collaborators: []
 tools:
@@ -652,6 +716,16 @@ tools:
 - tribal_forest_mapcp_export:prepare_landfire_v2_sample_request
 - tribal_forest_mapcp_export:recover_landfire_v2_job_manifest
 - tribal_forest_mapcp_export:submit_landfire_v2_sample_job
+- tribal_forest_mapcp_export:review_candidate_source_configuration
+- tribal_forest_mapcp_export:request_candidate_configuration_review
+- tribal_forest_mapcp_export:check_candidate_configuration_review
+- tribal_forest_mapcp_export:preview_boundary_source_submission
+- tribal_forest_mapcp_export:submit_boundary_source_job
+- tribal_forest_mapcp_export:check_boundary_source_job
+- tribal_forest_mapcp_export:collect_boundary_source_result
+- tribal_forest_mapcp_export:preview_boundary_candidate_mapping
+- tribal_forest_mapcp_export:create_boundary_candidate_mapping
+
 toolkits: []
 skills:
 - candidate-cover-mapping-review

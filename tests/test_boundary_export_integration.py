@@ -8,10 +8,11 @@ import pytest
 import review_package as rp
 
 
+@pytest.mark.parametrize("source_mode", [False, True])
 @pytest.mark.parametrize("outside", [False, True])
 @pytest.mark.parametrize("interior_nodata", [False, True])
 def test_actual_boundary_producer_to_polygon_export(
-    tmp_path, outside, interior_nodata
+    tmp_path, outside, interior_nodata, source_mode
 ):
     rasterio = pytest.importorskip("rasterio")
     import numpy as np
@@ -37,6 +38,8 @@ def test_actual_boundary_producer_to_polygon_export(
         [1, 7, 999],
         [7, 3, 999],
     ], dtype="int16")
+    if source_mode:
+        evt[2, 2] = 1001
     if interior_nodata:
         evt[1, 1] = -9999
 
@@ -111,6 +114,105 @@ def test_actual_boundary_producer_to_polygon_export(
         "unmapped_valid_output_code": 255,
         "universal_review_flags": ["synthetic_test_only"],
     }
+    if source_mode:
+        from source_configuration import build_source_configuration
+        from crosswalk_proposal import build_crosswalk_proposal
+        from crosswalk_review import build_crosswalk_review
+
+        # Actual raster/mask inspection, not agent-supplied counts.
+        inspected_evt, inside, grid = bm._read_inputs(tif, boundary)
+        valid = inside & (inspected_evt != -9999)
+        values, counts = np.unique(inspected_evt[valid], return_counts=True)
+        observed = [int(v) for v in values]
+
+        csv_bytes = (
+            b"VALUE,EVT_NAME,EVT_LF\n"
+            b"1,Synthetic type one,Tree\n"
+            b"3,Synthetic type three,Herb\n"
+            b"7,Synthetic type seven,Shrub\n"
+        )
+        profile = {
+            "product": "EVT", "version": "synthetic-v1", "region": "CONUS",
+        }
+        source = build_source_configuration(
+            csv_bytes, observed,
+            raster_profile=profile,
+            catalog_record={
+                **profile,
+                "source_url": "https://www.landfire.gov/synthetic-test.csv",
+                "sha256": hashlib.sha256(csv_bytes).hexdigest(),
+            },
+            code_column="VALUE",
+            name_column="EVT_NAME",
+        )
+        proposal = build_crosswalk_proposal(source, {
+            "source_configuration_sha256": source["configuration_sha256"],
+            "classes": [{
+                "output_code": entry["source_evt_code"],
+                "label": entry["display_label"],
+                "rationale": "Synthetic source-identity test; no local grouping.",
+            } for entry in source["entries"]],
+            "decisions": [{
+                "source_evt_code": entry["source_evt_code"],
+                "output_code": entry["source_evt_code"],
+                "proposed_forest_land": None,
+                "rationale": "Preserve source identity; forest policy not assigned.",
+                "unresolved": ["Forest-land policy not assigned"] + (
+                    ["Official label unavailable"]
+                    if entry["label_status"] == "missing_label" else []
+                ),
+            } for entry in source["entries"]],
+        })
+        review = build_crosswalk_review(source, proposal, {
+            "source_run_id": acquisition.name,
+            "boundary_sha256": digest(boundary),
+            "source_raster_sha256": digest(tif),
+            "source_configuration_sha256": source["configuration_sha256"],
+            "proposal_sha256": proposal["proposal_sha256"],
+            "total_grid_cells": int(inspected_evt.size),
+            "outside_boundary_cells": int((~inside).sum()),
+            "evt_nodata_inside_boundary_cells": int(
+                (inside & (inspected_evt == -9999)).sum()
+            ),
+            "evt_counts": [{
+                "source_evt_code": int(value), "cell_count": int(count),
+            } for value, count in zip(values, counts)],
+        })
+        assert grid["cell_area_m2"] == 900
+        assert review["coverage"]["valid_source_cells"]["cell_count"] == int(valid.sum())
+        assert review["coverage"]["unresolved_valid_cells"]["cell_count"] == int(valid.sum())
+        assert not review["approval_authenticated"]
+        assert {999, 1001}.issubset(observed)
+
+        # TEST-ONLY bridge. Not a production approval/save implementation.
+        table = [{
+            "output_code": entry["source_evt_code"],
+            "output_label": f"candidate_EVT_{entry['source_evt_code']}",
+            "candidate_forest_land": None,
+            "description": entry["display_label"],
+        } for entry in source["entries"]]
+        table += [
+            {"output_code": 255, "output_label": "unmapped_evt",
+             "candidate_forest_land": None, "description": "Unused test sentinel"},
+            {"output_code": -9999, "output_label": "nodata",
+             "candidate_forest_land": None, "description": "NoData"},
+        ]
+        crosswalk = {
+            **crosswalk,
+            "crosswalk_id": "synthetic_source_identity",
+            "cover_scheme_id": "synthetic_source_identity",
+            "crosswalk_approval_note":
+                "SYNTHETIC TEST FIXTURE ONLY; no real forestry or policy approval.",
+            "output_code_table": table,
+            "entries": [{
+                "evt_code": row["output_code"],
+                "output_code": row["output_code"],
+                "output_label": row["output_label"],
+                "candidate_forest_land": None,
+            } for row in table if row["output_code"] in observed],
+        }
+        assert review["proposal_sha256"] == proposal["proposal_sha256"]
+
     cw_name = "synthetic.json"
     (crosswalks / cw_name).write_text(json.dumps(crosswalk))
 
@@ -137,8 +239,24 @@ def test_actual_boundary_producer_to_polygon_export(
     methods_name = mapped.artifacts["methods_json"]
     methods = json.loads((root / methods_name).read_text())
 
+    if source_mode:
+        import csv
+        with (root / mapped.artifacts["codebook_csv"]).open(
+            encoding="utf-8-sig", newline=""
+        ) as stream:
+            exported_book = {
+                int(row["output_code"]): row
+                for row in csv.DictReader(stream)
+            }
+        for entry in source["entries"]:
+            code = entry["source_evt_code"]
+            assert exported_book[code]["output_label"] == f"candidate_EVT_{code}"
+            assert exported_book[code]["description"] == entry["display_label"]
+            assert exported_book[code]["candidate_forest_land"] == "null"
+
     expected_ct = evt.copy()
-    expected_ct[expected_ct == 999] = 255
+    if not source_mode:
+        expected_ct[expected_ct == 999] = 255
     if outside:
         expected_ct[:, 0] = -9999
     expected_fl = np.where(
@@ -147,10 +265,21 @@ def test_actual_boundary_producer_to_polygon_export(
                  np.where(expected_ct == 3, 0, 2))
     ).astype("int16")
 
+    if source_mode:
+        expected_fl = np.where(expected_ct == -9999, -9999, 2).astype("int16")
+
     with rasterio.open(root / mapped.artifacts["cover_type_tif"]) as ds:
         assert np.array_equal(ds.read(1), expected_ct)
     with rasterio.open(root / mapped.artifacts["forest_land_tif"]) as ds:
         assert np.array_equal(ds.read(1), expected_fl)
+
+    if source_mode:
+        expected_fl = np.where(expected_ct == -9999, -9999, 2).astype("int16")
+        # Recheck the real forest raster after replacing the legacy expectation.
+        with rasterio.open(root / mapped.artifacts["forest_land_tif"]) as ds:
+            assert np.array_equal(ds.read(1), expected_fl)
+        assert {999, 1001}.issubset(set(np.unique(expected_ct)))
+        assert not methods["unmapped_evt_codes_seen"]
 
     expected_outside = 3 if outside else 0
     expected_inside_nodata = 1 if interior_nodata else 0
@@ -188,12 +317,12 @@ def test_actual_boundary_producer_to_polygon_export(
         root, methods_name, raw_run_directory=run
     )
     assert package["storage_uploaded"] is False
-    assert package["schema_version"] == "2"
+    assert package["schema_version"] == "3"
 
     with zipfile.ZipFile(package["archive_path"]) as archive:
         assert archive.testzip() is None
         manifest = json.loads(archive.read("PACKAGE_MANIFEST.json"))
-        assert len(archive.namelist()) == 12
+        assert len(archive.namelist()) == 15
         for item in manifest["files"]:
             assert hashlib.sha256(
                 archive.read(item["name"])

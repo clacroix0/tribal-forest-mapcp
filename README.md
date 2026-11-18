@@ -387,6 +387,11 @@ local server discovery, a direct MCP tool execution, hosted agent behavior,
 and ArcGIS Pro opening. These checks answer different questions and should
 not be combined into a single pass rate.
 
+The organizer-provided watsonx.ai evaluation skill is available for compatible 
+local agent clients. It describes how to build a Phoenix evaluation harness against
+MapCP’s local stdio server using watsonx.ai instead of USAi. The skill is setup 
+guidance, not an implemented harness or a completed evaluation.
+
 ### GIS evaluation
 
 For the November 18 Mescalero polygon rehearsal, the reference was the

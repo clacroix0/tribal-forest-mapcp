@@ -16,6 +16,15 @@ These products are for professional review. They are not field inventory, final 
 - [Review the evaluation](#evaluation-tests-and-reproducibility): see what the software tests, GIS checks, and hosted-agent observations each establish.
 - [Check the remaining work](#remaining-submission-work): see what has not yet been demonstrated, including the full-boundary Pechanga workflow.
 
+## ArcGIS Pro preview
+
+![ArcGIS Pro screenshot of Mescalero pilot candidate cover-type patches, with the class legend and polygon attribute table visible](docs/images/mescalero-arcgis-pro-preview.jpg)
+
+*Mescalero pilot preview: raw candidate cover-type patches and their
+attributes shown in ArcGIS Pro. The colored footprint is the area shown
+in this preview, not a verified full project boundary. The patches are
+preliminary review units, not stands or field-verified cover types.*
+
 ## Demonstrated results and current limits
 
 | Checkpoint | What the evidence shows |

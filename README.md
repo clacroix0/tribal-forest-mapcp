@@ -267,15 +267,6 @@ For delivery, record package integrity, authorized access, workstation transfer,
 
 Outputs do not establish ownership, trust status, jurisdiction, legal access, commercial status, Tribal approval, or management authority.
 
-## Remaining submission work
-
-- Verify and record the read-only BIA search separately from the local discovery, focused test run, and Mescalero polygon rehearsal.
-- Reconcile the live image and serving revision. Verify registered schemas, agent and skill bindings, browser-review prerequisites, storage, and read access to the existing Pechanga acquisition before a separately approved review attempt. Do not submit another LANDFIRE acquisition for this troubleshooting step.
-- Complete the approved full-boundary workflow: candidate cover-type and forest-land rasters, raw polygons, acreage, flags, provenance, QC, package transfer, and professional ArcGIS Pro review. Report partial coverage explicitly rather than substituting a sample.
-- Record any additional regression and hosted-agent results separately. Finish or verify the judge-facing preview, functional demo, presentation, evaluation report, security notes, and lessons learned. Link only materials approved for public release and label the scope actually demonstrated.
-
-Candidate stand delineation and physical-accessibility screening are future milestones. Physical accessibility does not establish legal access. Generic onboarding, FIA calibration, AlphaEarth, change detection, inventory strata, and post-fire analysis are outside this submission scope.
-
 ## Documentation and license
 
 Start with [AGENTS.md](AGENTS.md) and the [project specification](docs/project-specification.md). Read the applicable pilot definitions before changing forestry rules and the [review-package delivery notes](docs/review-package-delivery.md) before changing export or storage. Dated checkpoints describe what was observed at the time, not what has since been deployed or verified.

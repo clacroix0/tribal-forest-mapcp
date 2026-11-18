@@ -6,7 +6,8 @@ from starlette.responses import JSONResponse
 from starlette.routing import Route
 
 from mcp.server.transport_security import TransportSecuritySettings
-from server import mcp
+from server import mcp, OUTPUT_FOLDER, _PROJECT_DATA_DIR
+from configuration_browser import browser_routes
 
 
 class RequireBearerToken:
@@ -18,6 +19,12 @@ class RequireBearerToken:
 
     async def __call__(self, scope, receive, send):
         if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        # Only these browser routes bypass MCP bearer auth; each has its own
+        # independent HTTPS operator authentication and CSRF enforcement.
+        if scope["path"].startswith("/configuration-review/"):
             await self.app(scope, receive, send)
             return
 
@@ -90,6 +97,8 @@ def build_app():
     http_app.routes.insert(
         0, Route("/health", health, methods=["GET", "HEAD"])
     )
+    for route in reversed(browser_routes(OUTPUT_FOLDER, _PROJECT_DATA_DIR)):
+        http_app.routes.insert(0, route)
     return RequireBearerToken(http_app, token)
 
 

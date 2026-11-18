@@ -6420,7 +6420,7 @@ def _apply_evt_crosswalk(
 @mcp.tool()
 def map_candidate_cover_types(
     collection_manifest_filename: str,
-    crosswalk_filename: str = "mescalero_v1_evt_crosswalk_v1.json",
+    crosswalk_filename: str | None = None,
 ) -> dict:
     """Apply the approved EVT crosswalk and produce candidate cover-type and
     forest-land rasters for professional review.
@@ -6464,6 +6464,13 @@ def map_candidate_cover_types(
         raise ToolError(
             "Use the exact generated LFPS v2 collection-manifest filename only, "
             "not a full path."
+        )
+
+    if not isinstance(crosswalk_filename, str) or not crosswalk_filename.strip():
+        raise ToolError(
+            "Explicit crosswalk selection is required. No default crosswalk "
+            "will be used. Establish an approved configuration applicable "
+            "to this project before mapping."
         )
 
     if not re.fullmatch(r"[A-Za-z0-9_-]+\.json", crosswalk_filename):
@@ -6920,6 +6927,230 @@ def export_arcgis_review_package(request: ReviewPackageExportRequest) -> dict:
     download URL. A failed upload may leave partial objects for administrator review.
     """
     return _deliver_review_package(OUTPUT_FOLDER, request.model_dump())
+
+
+
+from source_configuration_workflow import (
+    SourceReviewRequest,
+    review_source_configuration as _review_source_configuration,
+)
+
+
+@mcp.tool()
+def review_candidate_source_configuration(request: SourceReviewRequest) -> dict:
+    """Inspect a boundary acquisition and review proposed candidate classes.
+
+    Read-only. Requires an existing boundary-acquisition ID in this runtime
+    and the pinned local LF2025 reference. Validates collection artifact
+    hashes, LF2025 CONUS band descriptions, EPSG:5070 north-up 30 m grid,
+    reference checksum, and provenance. Counts actual EVT cells inside
+    the selected boundary.
+
+    Without a proposal, preserves source EVT identities and leaves forest-land
+    status unknown. Use returned source_configuration.configuration_sha256
+    when submitting an optional proposal. A proposal must supply classes
+    (output_code, label, rationale) and one decision for each observed code
+    (source_evt_code, output_code, proposed_forest_land, rationale, unresolved).
+
+    Returns source labels, proposed class acreage, unresolved decisions,
+    run-bound evidence, and source/proposal/review digests. Forest-land
+    values remain proposals, not approved assignments. Unknown is not nonforest.
+
+    No network, downloads, file writes, configuration saving, approval,
+    mapping, polygons, or export. No arbitrary paths or URLs are accepted.
+    Supports at most 200 observed codes and a bounded response; incompatible,
+    changed, missing, or oversized inputs fail without sample substitution.
+
+    Band descriptions and pinned reference association do not independently
+    authenticate product metadata. Results do not establish full-boundary
+    coverage, legal authority, field accuracy, or Tribal approval.
+    """
+    return _review_source_configuration(
+        OUTPUT_FOLDER, _PROJECT_DATA_DIR, request
+    )
+
+
+
+from boundary_acquisition import (
+    AcquisitionResult as BoundaryAcquisitionResult,
+    SubmitRequest as BoundarySourceSubmitRequest,
+    StatusRequest as BoundarySourceStatusRequest,
+    CollectRequest as BoundarySourceCollectRequest,
+    preview_boundary_submission as _preview_boundary_source_submission,
+    submit_boundary_job as _submit_boundary_source_job,
+    check_boundary_job as _check_boundary_source_job,
+    collect_boundary_bundle as _collect_boundary_source_result,
+)
+from boundary_mapping import (
+    MappingRequest as BoundaryCandidatePreviewRequest,
+    CreateMappingRequest as BoundaryCandidateCreateRequest,
+    MappingResult as BoundaryCandidateMappingResult,
+    preview_boundary_mapping as _preview_boundary_candidate_mapping,
+    create_boundary_mapping as _create_boundary_candidate_mapping,
+)
+
+
+class BoundarySourcePreviewRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    preparation_directory: str = Field(
+        pattern=r"^boundaryprep_[A-Za-z0-9_-]+$",
+        max_length=240,
+        description="Exact preparation-directory ID returned by boundary preflight; never a path.",
+    )
+
+
+@mcp.tool()
+def preview_boundary_source_submission(
+    request: BoundarySourcePreviewRequest,
+) -> BoundaryAcquisitionResult:
+    """Review the exact prepared full-boundary LANDFIRE acquisition request.
+
+    Requires a successful boundary preparation in this runtime. Rechecks the
+    selected boundary hash, product profile, and recomputed request parameters.
+    Returns proposed parameters, resource limits, and a request-bound token.
+
+    No network request, email, submission, download, classification, or file
+    write. Prepared geometry does not establish legal or geographic authority.
+    Limits are application bounds, not verified vendor guarantees.
+
+    Carry the exact preparation ID and returned token forward only after real
+    human approval of the request. A returned token is not human authorization.
+    Missing, changed, or incompatible preparation returns a structured failure.
+    """
+    return _preview_boundary_source_submission(
+        OUTPUT_FOLDER, request.preparation_directory
+    )
+
+
+@mcp.tool()
+def submit_boundary_source_job(
+    request: BoundarySourceSubmitRequest,
+) -> BoundaryAcquisitionResult:
+    """Submit one explicitly approved boundary-aware LFPS v2 acquisition job.
+
+    Consequential: requires real host-enforced human approval of the exact
+    prepared request and runtime contact email before invocation. The request
+    token binds inputs but does not authenticate approval. Do not enable this
+    hosted action until the host approval control has been verified.
+
+    Requires the exact preparation ID and token from acquisition preview.
+    Contact email is runtime-only for this submission; do not retain it in
+    agent memory, logs, evaluation records, or documentation. Do not echo it.
+
+    Makes a network submission and writes local attempt/job records. Does not
+    wait for completion, collect rasters, classify, or approve a boundary.
+    Returns the issued job ID and acquisition-directory ID when available.
+    Preserve those exact IDs for status and collection.
+
+    An uncertain submission outcome must not trigger automatic resubmission.
+    Existing attempt safeguards and bounded network behavior remain in force.
+    """
+    return _submit_boundary_source_job(OUTPUT_FOLDER, request)
+
+
+@mcp.tool()
+def check_boundary_source_job(
+    request: BoundarySourceStatusRequest,
+) -> BoundaryAcquisitionResult:
+    """Check an existing boundary LFPS job and save a new local status report.
+
+    Requires an acquisition-directory ID from submission or approved recovery
+    in this runtime. Makes a bounded status request and writes a status report;
+    obtain approval for these effects. Does not submit or download anything.
+
+    Returns actual service status and a status-report filename. Carry the exact
+    acquisition ID and returned report filename into collection only after
+    successful completion and explicit download approval. Do not guess IDs.
+
+    An unknown, failed, or canceled job is not a completed acquisition.
+    Does not perform classification, configuration approval, or mapping.
+    """
+    return _check_boundary_source_job(OUTPUT_FOLDER, request)
+
+
+@mcp.tool()
+def collect_boundary_source_result(
+    request: BoundarySourceCollectRequest,
+) -> BoundaryAcquisitionResult:
+    """Download and validate the result of a completed boundary LFPS job.
+
+    Consequential: requires verified host human approval for the exact
+    acquisition and status report before invocation. The collection phrase
+    alone is not authorization. Do not enable hosted execution without that
+    approval control.
+
+    Requires an existing successful status report for the same job. Downloads
+    an allowlisted HTTPS bundle, safely extracts it under existing limits,
+    validates expected products and raster coverage/grid, and writes collection
+    provenance and observed-code statistics. Never overwrites a collection.
+
+    Returns usable_for_mapping, warnings/errors, and controlled artifact names.
+    Collection success is not crosswalk approval, classification, or independent
+    accuracy. Failed or partial artifacts must not be used as completed inputs.
+    Carry the exact acquisition-directory ID into configuration review/mapping.
+    """
+    return _collect_boundary_source_result(OUTPUT_FOLDER, request)
+
+
+@mcp.tool()
+def preview_boundary_candidate_mapping(
+    request: BoundaryCandidatePreviewRequest,
+) -> BoundaryCandidateMappingResult:
+    """Preview candidate mapping for an existing validated boundary acquisition.
+
+    Requires explicit selection of a suitable approved crosswalk. No pilot
+    crosswalk is chosen automatically. Run-bound configurations must match
+    their recorded acquisition, boundary, raster, and local approval record.
+
+    Obtain approval for in-memory classification and a new local report.
+    Revalidates inputs, calculates class and forest-land acreage, cell closure,
+    raw four-neighbor patch counts, and current raw-polygon limit comparisons.
+    Writes a preview report only; no mapped raster or polygon is written.
+
+    small_patch_threshold_m2 is a reporting threshold only, not permission
+    to generalize or remove patches. Preserves existing crosswalk decisions,
+    uncertain status, NoData accounting, and source limitations.
+
+    Returns the exact preview-directory ID required for create. Passing preview
+    limits does not prove polygon execution, package size, or full coverage.
+    Missing, changed, or incompatible inputs return a structured failure.
+    """
+    return _preview_boundary_candidate_mapping(
+        OUTPUT_FOLDER, request, project_data_root=_PROJECT_DATA_DIR
+    )
+
+
+@mcp.tool()
+def create_boundary_candidate_mapping(
+    request: BoundaryCandidateCreateRequest,
+) -> BoundaryCandidateMappingResult:
+    """Create boundary-clipped candidate cover-type and forest-land rasters.
+
+    Consequential: requires real human approval of this exact acquisition,
+    preview, and selected crosswalk before invocation. Do not enable hosted
+    execution until the host approval control is verified.
+
+    Requires a matching successful mapping preview in this runtime. Rechecks
+    source hashes, configuration binding where applicable, and preview counts.
+    Writes two candidate rasters, codebook, acreage tables, and methods.
+    Verifies raster read-back and refuses existing target filenames.
+
+    Returns actual output filenames for raw-polygon generation and export.
+    Existing-output failure is not permission to delete, overwrite, rename, or
+    remap automatically; inspect and reuse suitable completed artifacts instead.
+
+    Does not generate polygons, generalize, upload, approve forestry policy,
+    infer disturbance/nonstocked status, or establish legal authority.
+    Preliminary outputs require professional review. Unknown is not nonforest.
+    """
+    return _create_boundary_candidate_mapping(
+        OUTPUT_FOLDER, request, project_data_root=_PROJECT_DATA_DIR
+    )
+
+
+from configuration_browser_mcp import register_configuration_browser_tools
+
+register_configuration_browser_tools(mcp, OUTPUT_FOLDER, _PROJECT_DATA_DIR)
 
 
 if __name__ == "__main__":

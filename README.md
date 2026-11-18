@@ -16,15 +16,6 @@ These products are for professional review. They are not field inventory, final 
 - [Review the evaluation](#evaluation-tests-and-reproducibility): see what the software tests, GIS checks, and hosted-agent observations each establish.
 - [Check the remaining work](#remaining-submission-work): see what has not yet been demonstrated, including the full-boundary Pechanga workflow.
 
-<!--
-Before public release, add judge-accessible links here to the final presentation,
-evaluation report, and approved static map preview. Verify the paths and access
-from a signed-out browser. Caption the preview with its geography, processed
-extent, and sample or full-boundary status. Do not link private artifacts,
-runtime paths, signed download URLs, or the organizer's sample materials as
-project deliverables.
--->
-
 ## Demonstrated results and current limits
 
 | Checkpoint | What the evidence shows |

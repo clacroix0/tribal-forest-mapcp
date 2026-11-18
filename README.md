@@ -18,7 +18,7 @@ These products are for professional review. They are not field inventory, final 
 
 ## ArcGIS Pro preview
 
-![ArcGIS Pro screenshot of Mescalero pilot candidate cover-type patches, with the class legend and polygon attribute table visible](docs/images/mescalero-arcgis-pro-preview.jpg)
+![ArcGIS Pro screenshot of Mescalero pilot candidate cover-type patches, with the class legend and polygon attribute table visible](docs/images/mescalero-arcgis-pro-preview.png)
 
 *Mescalero pilot preview: raw candidate cover-type patches and their
 attributes shown in ArcGIS Pro. The colored footprint is the area shown

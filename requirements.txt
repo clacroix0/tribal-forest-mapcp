@@ -1,8 +1,12 @@
-# Tribal Forest MapCP — initial runtime and test dependencies
+# Tribal Forest MapCP — local runtime and test dependencies.
 #
-# Bob must verify package compatibility, installed versions, Python version,
-# GDAL/PROJ requirements, and IBM/RHEL support before creating a locked
-# environment or pinning exact versions.
+# These are minimum versions, not a lockfile. On 2026-11-18, a fresh VM
+# environment at commit a8a0f5d installed this dependency set with Python
+# 3.12.15 and resolved mcp 2.3.0. Local stdio discovery passed: 26 tools
+# listed, none invoked. This is not a full test-suite or GIS validation.
+#
+# Use a project virtual environment. For hosted/container dependencies,
+# see requirements-deploy.txt.
 
 mcp>=1.0
 httpx>=0.27

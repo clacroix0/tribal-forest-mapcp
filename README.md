@@ -24,31 +24,6 @@ These products are for professional review. They are not field inventory, final 
 attributes shown in ArcGIS Pro. The patches are preliminary review units, 
 not stands or field-verified cover types.*
 
-## Demonstrated results and current limits
-
-| Checkpoint | What the evidence shows |
-|---|---|
-| November 10, 2026: hosted draft test | The hosted agent and `candidate-cover-mapping-review` skill were exercised in a bounded draft test. The agent invented a manifest filename and requested approval prematurely. Instructions were revised afterward; a successful hosted retest is not claimed. |
-| November 13: raster-only sample | The operator reported downloading a sample ZIP containing candidate cover-type and forest-land rasters, acreage tables, codebooks, methods JSON, and ArcGIS Pro opening instructions. It did not include polygons. |
-| November 16: polygon-inclusive sample | The operator reported downloading a schema 2 sample ZIP and opening its rasters and raw-patch GeoPackage in ArcGIS Pro 3.7.3 without errors. This was an informal opening and visual check, not professional acceptance, independent accuracy assessment, or full-boundary delivery. The deployed build was not independently traced to a Git commit. |
-| November 18: fresh local startup | A fresh VM environment at `a8a0f5d`, using Python `3.12.15` and `mcp 2.3.0`, discovered 26 MCP tools and invoked none. |
-| November 18: local Mescalero polygon rehearsal | A direct local call generated 158,016 raw polygons from an existing candidate cover-type raster. Geometry, GeoPackage read-back, raster round-trip comparison, per-class acreage closure, and unchanged-input checks passed. No new classification or stands were produced. Transfer and ArcGIS Pro opening of this new output were not verified. |
-| November 18: focused integration verification | The integration working tree later committed as `2819d94` discovered 26 MCP tools and invoked none. Seven focused pytest modules passed: 231 tests in 5.25 seconds, with no skips reported. The run reused the existing VM environment. It was not a full-suite run or a hosted test. |
-| November 18: hosted configuration | Code Engine listed `MAPCP_CONFIG_REVIEW_ENABLED`, `MAPCP_CONFIG_STORAGE_APPROVED`, and `MAPCP_REVIEW_EXPORT_ENABLED` as `true`. The serving revision and its source provenance remain to be reconciled. The flag listing does not establish successful browser review, access to existing acquisitions, durable storage, or completed delivery. |
-| Pechanga full-boundary workflow | Earlier browser-review attempts for the existing acquisition returned `review_request_failed` and `configuration_saved: false`. Those attempts produced no review link, saved configuration, candidate rasters, or polygons. Live read access to the existing acquisition and successful browser review remain unverified. The next verification should reuse the existing acquisition, not submit a replacement LANDFIRE job. |
-
-The November 16 sample package used scope `preliminary_raster_and_raw_polygon_review`. In addition to the candidate rasters and supporting materials, it contained:
-
-- `raw_cover_type_patches.gpkg`, with layer `candidate_cover_type_raw_patches`
-- `raw_patch_acreage.csv`
-- `raw_patch_qc.json`
-
-The November 18 Mescalero rehearsal used the existing candidate raster, its matching codebook, and methods file `cmap_f4111579_v2_methods.json`. All three input hashes matched the November 16 polygon QC record. The methods identified `mescalero_v1_evt_crosswalk_v2` as the crosswalk used to create the input raster. The rehearsal wrote a new GeoPackage, acreage CSV, QC JSON, and opening instructions. It did not rerun classification or require Orchestrate, a new LANDFIRE submission, or a hosted upload.
-
-The Mescalero raster retained EVT codes `7012`, `7057`, and `7061` as `unmapped_evt`, with forest-land status `unknown`. In the November 18 output, that category accounted for 4,184 patches covering approximately 3,947 acres. The reported zero overlap, gaps, and extra coverage refer to the valid input raster footprint, not to independently verified coverage of the approved project boundary.
-
-The November 16 package and November 18 output are separate artifacts. A server-side path is not delivery. A successful download establishes transfer, and a successful opening establishes that the tested software could open the tested layers. Neither proves classification accuracy, full-boundary coverage, durable retention, or professional acceptance.
-
 ## Run the MCP server locally
 
 The quickest reviewer check is `check_mcp_stdio.py`. It launches `server.py` as a child process with the same Python interpreter, connects over standard input and output (stdio), lists the registered tools, and exits. It does not invoke tools. No Code Engine deployment, Orchestrate agent, Node.js, browser, or forestry acquisition is required for this check.

@@ -26,11 +26,141 @@ not stands or field-verified cover types.*
 
 ## Run the MCP server locally
 
-The quickest reviewer check is `check_mcp_stdio.py`. It launches `server.py` as a child process with the same Python interpreter, connects over standard input and output (stdio), lists the registered tools, and exits. It does not invoke tools. No Code Engine deployment, Orchestrate agent, Node.js, browser, or forestry acquisition is required for this check.
+Start here if you want to verify that MapCP starts on your computer. The
+`check_mcp_stdio.py` script launches `server.py`, connects over standard input
+and output (stdio), lists the registered tools, and exits without invoking any
+of them. You do not need ArcGIS Pro, Node.js, Code Engine, an Orchestrate
+account, or forestry data for this check.
 
-### 1. Set up the project environment
+### Windows quickstart: start from scratch
 
-Run from the root of your cloned repository. The example uses Bash on Linux and Python 3.12. Use an approved interpreter and install dependencies only in a project virtual environment. Do not replace system Python or copy a virtual environment from another machine.
+Use Windows PowerShell. Copy the commands, not the `PS C:\Users\...>` prompt.
+Use only software and package sources approved for your workstation. If a
+step fails, stop there and keep the exact error.
+
+#### 1. Check Git and get a local copy
+
+```powershell
+git --version
+```
+
+If PowerShell does not recognize `git`, install Git for Windows through your
+approved software portal or contact IT. Close and reopen PowerShell after
+installation, then repeat `git --version`.
+
+Run these commands one at a time. `git clone` downloads the repository into
+a `tribal-forest-mapcp` folder under your Windows user folder. If you already
+have a local checkout, skip cloning and open that folder instead.
+
+```powershell
+Set-Location $HOME
+git clone [https://github.com/clacroix0/tribal-forest-mapcp.git](https://github.com/clacroix0/tribal-forest-mapcp.git)
+Set-Location "$HOME\tribal-forest-mapcp"
+git status --short --branch
+git rev-parse --short HEAD
+Get-Item .\requirements.txt, .\server.py, .\check_mcp_stdio.py
+```
+
+Confirm that Git prints a commit ID and PowerShell lists all three files.
+Keep the commit ID with your test result.
+
+#### 2. Locate Python and create a project environment
+
+Use an approved Python installation. The earlier Linux check used Python
+3.12.15; the Windows check documented below used Python 3.14.3.
+
+Start by checking whether `python` is available:
+
+```powershell
+python --version
+```
+
+If it reports the approved interpreter you want to use, set:
+
+```powershell
+$python = "python"
+```
+
+If the `python` command isn't available but you know where Python is
+installed, use the full path to `python.exe` instead. Replace the example
+path with your own. PowerShell's `&` runs the executable even if the path
+contains spaces.
+
+```powershell
+$python = "C:\path\to\your\python.exe"
+```
+
+If you cannot locate an approved interpreter, stop and check with IT.
+Once `$python` is set, verify it and check whether the environment already
+exists:
+
+```powershell
+& $python --version
+& $python -m venv --help
+Test-Path -LiteralPath .\.venv-mapcp
+```
+
+If Python prints its version, `venv` prints its help, and `Test-Path` returns
+`False`, create and verify the environment:
+
+```powershell
+& $python -m venv .venv-mapcp
+.\.venv-mapcp\Scripts\python.exe --version
+.\.venv-mapcp\Scripts\python.exe -m pip --version
+```
+
+If `Test-Path` returns `True`, do not recreate the folder. Use it only if
+you can verify it is the intended MapCP environment created on this
+computer. The `pip --version` output should show a path inside
+`.venv-mapcp`. You do not need to activate the environment or change
+PowerShell's execution policy. Do not copy a virtual environment from
+another machine.
+
+#### 3. Check and install dependencies
+
+If downloads are approved, run the dry run first. It may download package
+files from your configured package source, but it does not install them.
+`--only-binary=:all:` limits pip to prebuilt packages.
+
+```powershell
+.\.venv-mapcp\Scripts\python.exe -m pip install --dry-run --only-binary=:all: -r .\requirements.txt
+```
+
+On a fresh environment, look for `Would install ...` with no error. Then,
+if package installation is approved, install into the project environment:
+
+```powershell
+.\.venv-mapcp\Scripts\python.exe -m pip install --only-binary=:all: -r .\requirements.txt
+```
+
+If pip reports a missing compatible package, a network error, or a
+certificate error, stop and keep the error. Do not bypass certificate
+checks or fall back to building GIS packages from source as a workaround.
+`requirements.txt` lists minimum versions, not a lockfile, so resolved
+versions can differ between machines or dates.
+
+#### 4. Run the startup check
+
+```powershell
+.\.venv-mapcp\Scripts\python.exe .\check_mcp_stdio.py
+```
+
+The November 24, 2026 Windows check on `main` at `59d6e29` with Python
+3.14.3 ended with:
+
+```text
+STDIO DISCOVERY COMPLETE: 26 tools; no tools invoked.
+```
+
+The tool count can change with the checkout. Record your commit, Python
+version, and final discovery line. This verifies local startup and tool
+discovery only. It does not run mapping, submit a LANDFIRE job, validate
+GIS outputs, or test the hosted Orchestrate agent.
+
+### Linux quickstart
+
+From the root of a cloned checkout, use Bash and an approved Python 3.12
+interpreter. The `&&` chain stops at the first failure.
 
 ```bash
 test -f requirements.txt &&
@@ -43,25 +173,17 @@ python3.12 -m venv .venv-mapcp &&
 ./.venv-mapcp/bin/python -m pip install -r requirements.txt
 ```
 
-The `&&` chain stops at the first failure. If `.venv-mapcp` already exists and is your verified MapCP environment, skip creation and installation and go to Step 2. If Python 3.12 is unavailable, use an approved interpreter setup rather than accepting a system package installation prompt.
-
-`requirements.txt` specifies minimum versions, not a lockfile. GIS dependencies may need platform-specific support. If setup fails, record the interpreter version, installed package versions if available, and the exact error. Keep virtual environments out of Git.
-
-### 2. Discover the tools
+If `.venv-mapcp` already exists, do not recreate it. Verify it is the
+intended Linux MapCP environment and that its dependencies are installed.
+Then run the discovery check using its Python executable:
 
 ```bash
 ./.venv-mapcp/bin/python check_mcp_stdio.py
 ```
 
-The November 18 local runs reported:
-
-```text
-STDIO DISCOVERY COMPLETE: 26 tools; no tools invoked.
-```
-
-The number can change with the checkout. Discovery verifies local startup, client connection, and tool registration. It does not verify individual tool calls, GIS processing, browser approval, hosted agent behavior, or package delivery.
-
-Use the explicit virtual-environment interpreter. Bare `python server.py` may select a different interpreter that cannot import project dependencies such as `pyproj`.
+Use the explicit virtual-environment interpreter on either platform.
+Running bare `python server.py` can select a Python installation that does
+not have the MapCP dependencies. Keep virtual environments out of Git.
 
 ### Optional: launch directly or connect another MCP client
 
